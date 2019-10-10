@@ -1,4 +1,5 @@
-﻿using Seal.Model;
+﻿using Seal.Helpers;
+using Seal.Model;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -26,7 +27,7 @@ namespace TelelogosGenerationReport
             {
                case 1: SimpleExecution(); break;
                case 2: CreationAndExecution(); break;
-               case 3: NoSql(); break;
+               case 3: ConformityReport(DATA_Statistics); break;
             }
 
             Console.WriteLine("Génération du rapport terminée ... (0 to quit)\n");
@@ -116,7 +117,7 @@ namespace TelelogosGenerationReport
          Process.Start(result);
       }
 
-      public static void NoSql()
+      public static void ConformityReport(DashboardStatistics data)
       {
          // Create the repository
          var repository = Repository.Create();
@@ -136,9 +137,22 @@ namespace TelelogosGenerationReport
          master.Source = source;
          source.MetaData.Tables.Add(master);
 
-         // Add definition script and refresh the table
-         master.DefinitionScript = File.ReadAllText(Path.Combine(Repository.Instance.ViewsFolder, "Telelogos", "M4D_Conformite_Definition.cshtml"));
-         master.Refresh();
+         // Add the columns
+         master.NoSQLTable = new DataTable();
+         master.NoSQLTable.Columns.Add(new DataColumn("Conformite", typeof(string)));
+         master.NoSQLTable.Columns.Add(new DataColumn("Quantite", typeof(int)));
+
+         foreach (DataColumn column in master.NoSQLTable.Columns)
+         {
+            var metaColumn = MetaColumn.Create(column.ColumnName);
+            metaColumn.Source = master.Source;
+            metaColumn.DisplayName = Helper.DBNameToDisplayName(column.ColumnName.Trim());
+            metaColumn.Category = "Master";
+            metaColumn.DisplayOrder = master.GetLastDisplayOrder();
+            metaColumn.Type = Helper.NetTypeConverter(column.DataType);
+            metaColumn.SetStandardFormat();
+            master.Columns.Add(metaColumn);
+         }
 
          // Add the source to the repository
          source.InitReferences(repository);
@@ -172,10 +186,10 @@ namespace TelelogosGenerationReport
 
          model.InitReferences();
 
-         // Add the data for the reporting
+         // Add the rows for the reporting
          model.ResultTable = model.Source.MetaData.MasterTable.NoSQLTable.Clone();
-         model.ResultTable.Rows.Add("Conforme", 65);
-         model.ResultTable.Rows.Add("Non conforme", 35);
+         model.ResultTable.Rows.Add("Conforme", data.PlayersConformCount);
+         model.ResultTable.Rows.Add("Non conforme", data.PlayersNotConformCount);
 
          // Configure the view
          var view = report.Views.Find(x => x.ViewName == "View");
@@ -190,153 +204,29 @@ namespace TelelogosGenerationReport
 
          // Execute the report
          report.RenderOnly = true;
+         report.Format = ReportFormat.pdf;
          ReportExecution execution = new ReportExecution() { Report = report };
          execution.Execute();
          while (report.IsExecuting) System.Threading.Thread.Sleep(100);
 
-         // Generate the HTML
-         string result = execution.GenerateHTMLResult();
+         // Generate the report
+         //var outputFile = execution.GeneratePDFResult();
+
          // Show the report
-         Process.Start(result);
+         //Process.Start(outputFile);
       }
 
-      public static void NoSQLDataSource()
+      static DashboardStatistics DATA_Statistics = new DashboardStatistics
       {
-         var repository = Repository.Create();
-         Report report = Report.Create(repository);
-         report.DisplayName = "Players Reporting";
-         
-
-         var source = report.Sources.FirstOrDefault(i => i.Name.StartsWith("NoSQLDataSourceWith"));
-         
-
-
-         report.Models[0].SourceGUID = source.GUID;
-
-         var element = ReportElement.Create();
-         var column = source.MetaData.MasterTable.Columns.First(c => c.Name == "Conformite");
-         element.Name = column.Name;
-         element.MetaColumnGUID = column.GUID;
-         element.MetaColumn = column;
-         element.Model = report.Models[0];
-         element.PivotPosition = PivotPosition.Row;
-         element.SerieDefinition = SerieDefinition.Axis;
-         report.Models[0].Elements.Add(element);
-
-         element = ReportElement.Create();
-         column = source.MetaData.MasterTable.Columns.First(c => c.Name == "Quantite");
-         element.Name = column.Name;
-         element.MetaColumnGUID = column.GUID;
-         element.MetaColumn = column;
-         element.Model = report.Models[0];
-         report.Models[0].Elements.Add(element);
-         element.PivotPosition = PivotPosition.Data;
-         element.ChartJSSerie = ChartJSSerieDefinition.Pie;
-         report.Models[0].Elements.Add(element);
-
-         var resTable = new DataTable();
-
-         resTable.Columns.Add(new DataColumn("Conformite", typeof(string)));
-         resTable.Columns.Add(new DataColumn("Quantite", typeof(int)));
-         resTable.Rows.Add("Conforme", 75);
-         resTable.Rows.Add("Non conforme", 25);
-         report.Models[0].ResultTable = resTable;
-         report.RenderOnly = true;
-
-
-         var view = report.Views.Find(x => x.ViewName == "View");
-         var model = view.Views.Find(x => x.ViewName == "Model");
-         var container = model.Views.Find(x => x.ViewName == "Model Container");
-         var chartJS = container.Views.Find(x => x.ViewName == "Chart JS");
-
-         chartJS.InitParameters(false);
-         var paramTitle = chartJS.Parameters.Find(x => x.Name == "chartjs_title");
-         paramTitle.TextValue = "Conformité des players";
-         var paramDoughnut = chartJS.Parameters.Find(x => x.Name == "chartjs_doughnut");
-         paramDoughnut.BoolValue = true;
-
-         ReportExecution execution = new ReportExecution() { Report = report };
-         execution.Execute();
-         while (report.IsExecuting) System.Threading.Thread.Sleep(100);
-         string result = execution.GenerateHTMLResult();
-
-         Process.Start(result);
-      }
-
-      public static void M44D_PercentView(int companyId)
-      {
-         var repository = Repository.Create();
-         Report report = Report.Create(repository);
-         report.DisplayName = "Players Reporting";
-         var source = report.Sources.FirstOrDefault(i => i.Name.StartsWith("NoSQLDataSource"));
-
-         //source.MetaData.MasterTable.DefinitionScript
-
-
-         var table = new DataTable();
-         table.Columns.Add(new DataColumn("Conformite", typeof(string)));
-         table.Columns.Add(new DataColumn("Quantite", typeof(int)));
-
-         table.Rows.Add("Conforme", 75);
-         table.Rows.Add("Non conforme", 25);
-
-         source.MetaData.MasterTable.NoSQLTable = table;
-
-         report.Models[0].SourceGUID = source.GUID;
-
-         var element = ReportElement.Create();
-         var column = table.Columns["Conformite"];
-         element.Name = column.ColumnName;
-         element.MetaColumn = MetaColumn.Create("Conformite");
-         element.PivotPosition = PivotPosition.Row;
-         element.SerieDefinition = SerieDefinition.Axis;
-         report.Models[0].Elements.Add(element);
-
-         element = ReportElement.Create();
-         column = table.Columns["Quantite"];
-         element.Name = column.ColumnName;
-         element.MetaColumn = MetaColumn.Create("Quantite");
-         report.Models[0].Elements.Add(element);
-         element.PivotPosition = PivotPosition.Data;
-         element.ChartJSSerie = ChartJSSerieDefinition.Pie;
-
-         report.Models[0].FillResultTable();
-
-
-
-         var view = report.Views.Find(x => x.ViewName == "View");
-         var model = view.Views.Find(x => x.ViewName == "Model");
-         var container = model.Views.Find(x => x.ViewName == "Model Container");
-         var chartJS = container.Views.Find(x => x.ViewName == "Chart JS");
-
-         chartJS.InitParameters(false);
-         var paramTitle = chartJS.Parameters.Find(x => x.Name == "chartjs_title");
-         paramTitle.TextValue = "Conformité des players";
-         var paramDoughnut = chartJS.Parameters.Find(x => x.Name == "chartjs_doughnut");
-         paramDoughnut.BoolValue = true;
-
-         ReportExecution execution = new ReportExecution() { Report = report };
-         execution.Execute();
-         while (report.IsExecuting) System.Threading.Thread.Sleep(100);
-         string result = execution.GenerateHTMLResult();
-
-         Process.Start(result);
-      }
-
-      internal static  DashboardStatistics getData()
-      {
-         return new DashboardStatistics()
-         {
-            PlayersOkCount = 1,
-            PlayersUnreachableCount = 0,
-            PlayersActivCount = 1,
-            PlayersUpToDateCount = 1,
-            PlayersNotUpToDateCount = 0,
-            PlayersConformCount = 1,
-            PlayersNotConformCount = 0,
-            PlayerIsInitialized = 2,
-            PlayerLicencesCount = -1
-         };
-      }
+         PlayersOkCount = 1,
+         PlayersUnreachableCount = 0,
+         PlayersActivCount = 1,
+         PlayersUpToDateCount = 1,
+         PlayersNotUpToDateCount = 0,
+         PlayersConformCount = 66,
+         PlayersNotConformCount = 34,
+         PlayerIsInitialized = 2,
+         PlayerLicencesCount = -1
+      };
    }
 }
