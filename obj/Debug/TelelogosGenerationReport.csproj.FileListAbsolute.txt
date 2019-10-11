@@ -28,3 +28,7 @@ C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\TelelogosGenera
 C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\TelelogosGenerationReport\obj\Debug\TelelogosGenerationReport.csproj.CopyComplete
 C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\TelelogosGenerationReport\obj\Debug\TelelogosGenerationReport.exe
 C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\TelelogosGenerationReport\obj\Debug\TelelogosGenerationReport.pdb
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\TelelogosGenerationReport\bin\Debug\SealConverter.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\TelelogosGenerationReport\bin\Debug\wnvhtmltopdf.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\TelelogosGenerationReport\bin\Debug\EPPlus.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\TelelogosGenerationReport\bin\Debug\wnvinternal.dat

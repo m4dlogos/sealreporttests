@@ -15,26 +15,33 @@ namespace TelelogosGenerationReport
    {
       static void Main(string[] args)
       {
-         Console.WriteLine("1. Simple Execution");
-         Console.WriteLine("2. Creation adn Execution");
-         Console.WriteLine("3. M4D Percent View");
-         Console.WriteLine("Which report ? (1, 2 or 3)");
-         var num = int.Parse(Console.ReadLine());
+         Console.WriteLine("Choisir votre format de sortie:");
+         Console.WriteLine("1. HTML");
+         Console.WriteLine("2. Print");
+         Console.WriteLine("3. Pdf");
+         Console.WriteLine("");
+         int num = 0;
+         var ok = int.TryParse(Console.ReadLine(), out num);
+         var options = new List<int> { 1, 2, 3 };
 
-         while (num != 0)
+         while (options.Contains(num) && ok)
          {
+            var format = ReportFormat.html;
            switch (num)
             {
-               case 1: SimpleExecution(); break;
-               case 2: CreationAndExecution(); break;
-               case 3: ConformityReport(DATA_Statistics); break;
+               case 1: format = ReportFormat.html; break;
+               case 2: format = ReportFormat.print; break;
+               case 3: format = ReportFormat.pdf; break;
             }
 
-            Console.WriteLine("Génération du rapport terminée ... (0 to quit)\n");
-            num = int.Parse(Console.ReadLine());
+            ConformityReport(DATA_Statistics, format);
+
+            Console.WriteLine("Générer un autre rapport ? (choisir le format ou appuyer sur une autre touche)\n");
+            ok = int.TryParse(Console.ReadLine(), out num);
          }
       }
 
+      #region Samples
       public static void SimpleExecution()
       {
          //Simple load and report execution and generation in a HTML Result file
@@ -117,7 +124,9 @@ namespace TelelogosGenerationReport
          Process.Start(result);
       }
 
-      public static void ConformityReport(DashboardStatistics data)
+      #endregion
+
+      public static void ConformityReport(DashboardStatistics data, ReportFormat format)
       {
          // Create the repository
          var repository = Repository.Create();
@@ -204,10 +213,11 @@ namespace TelelogosGenerationReport
 
          // Execute the report
          report.RenderOnly = true;
-         report.Format = ReportFormat.pdf;
+         report.Format = format;
+         //report.Views[0].PdfConfigurations.Add(getPdfHeaderConfiguration());
          ReportExecution execution = new ReportExecution() { Report = report };
          execution.Execute();
-         while (report.IsExecuting) System.Threading.Thread.Sleep(100);
+         //while (report.IsExecuting) System.Threading.Thread.Sleep(100);
 
          // Generate the report
          //var outputFile = execution.GeneratePDFResult();
@@ -228,5 +238,11 @@ namespace TelelogosGenerationReport
          PlayerIsInitialized = 2,
          PlayerLicencesCount = -1
       };
+
+      private static string getPdfHeaderConfiguration()
+      {
+         var configurationPath = Path.GetDirectoryName(Repository.Instance.ConfigurationPath);
+         return File.ReadAllText(Path.Combine(configurationPath, "PdfHeaderOptions.xml"));
+      }
    }
 }
