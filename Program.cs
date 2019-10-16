@@ -6,6 +6,7 @@ using System.Data;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net.Mail;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -19,7 +20,6 @@ namespace TelelogosGenerationReport
          Console.WriteLine("1. HTML");
          Console.WriteLine("2. Print");
          Console.WriteLine("3. Pdf");
-         Console.WriteLine("");
          int num = 0;
          var ok = int.TryParse(Console.ReadLine(), out num);
          var options = new List<int> { 1, 2, 3 };
@@ -138,20 +138,32 @@ namespace TelelogosGenerationReport
          source.IsDefault = true;
          foreach (var src in repository.Sources) src.IsDefault = false;
 
+         repository.Sources.Add(source);
+
          // Create the master table and add it to the data source
          var master = MetaTable.Create();
          master.DynamicColumns = true;
          master.IsEditable = false;
          master.Alias = MetaData.MasterTableName;
          master.Source = source;
-         source.MetaData.Tables.Add(master);
+         source.MetaData.Tables.Add(master);      
 
-         // Add the columns
-         master.NoSQLTable = new DataTable();
-         master.NoSQLTable.Columns.Add(new DataColumn("Conformite", typeof(string)));
-         master.NoSQLTable.Columns.Add(new DataColumn("Quantite", typeof(int)));
+         // Create the report
+         Report report = Report.Create(repository);
+         report.DisplayName = "Rapport de conformité des players";
 
-         foreach (DataColumn column in master.NoSQLTable.Columns)
+         // Configure the model's elements
+         var model = report.Models[0];
+         // Add the result table
+         model.ResultTable = new DataTable();
+
+         model.ResultTable.Columns.Add(new DataColumn("Conformite", typeof(string)));
+         model.ResultTable.Columns.Add(new DataColumn("Quantite", typeof(int)));
+
+         model.ResultTable.Rows.Add("Conforme", data.PlayersConformCount);
+         model.ResultTable.Rows.Add("Non conforme", data.PlayersNotConformCount);
+
+         foreach (DataColumn column in model.ResultTable.Columns)
          {
             var metaColumn = MetaColumn.Create(column.ColumnName);
             metaColumn.Source = master.Source;
@@ -162,17 +174,6 @@ namespace TelelogosGenerationReport
             metaColumn.SetStandardFormat();
             master.Columns.Add(metaColumn);
          }
-
-         // Add the source to the repository
-         source.InitReferences(repository);
-         repository.Sources.Add(source);
-
-         // Create the report
-         Report report = Report.Create(repository);
-         report.DisplayName = "Rapport de conformité des players";
-
-         // Configure the model's elements
-         var model = report.Models[0];
 
          foreach (var column in master.Columns)
          {
@@ -193,12 +194,8 @@ namespace TelelogosGenerationReport
             report.Models[0].Elements.Add(element);
          }
 
+         source.InitReferences(repository);
          model.InitReferences();
-
-         // Add the rows for the reporting
-         model.ResultTable = model.Source.MetaData.MasterTable.NoSQLTable.Clone();
-         model.ResultTable.Rows.Add("Conforme", data.PlayersConformCount);
-         model.ResultTable.Rows.Add("Non conforme", data.PlayersNotConformCount);
 
          // Configure the view
          var view = report.Views.Find(x => x.ViewName == "View");
@@ -213,17 +210,18 @@ namespace TelelogosGenerationReport
 
          // Execute the report
          report.RenderOnly = true;
-         report.Format = format;
+         report.Format = ReportFormat.pdf;
          //report.Views[0].PdfConfigurations.Add(getPdfHeaderConfiguration());
          ReportExecution execution = new ReportExecution() { Report = report };
          execution.Execute();
          //while (report.IsExecuting) System.Threading.Thread.Sleep(100);
 
          // Generate the report
-         //var outputFile = execution.GeneratePDFResult();
+         var outputFile = execution.GeneratePDFResult();
+         sendEmail(outputFile);
 
          // Show the report
-         //Process.Start(outputFile);
+         Process.Start(outputFile);
       }
 
       static DashboardStatistics DATA_Statistics = new DashboardStatistics
@@ -243,6 +241,39 @@ namespace TelelogosGenerationReport
       {
          var configurationPath = Path.GetDirectoryName(Repository.Instance.ConfigurationPath);
          return File.ReadAllText(Path.Combine(configurationPath, "PdfHeaderOptions.xml"));
+      }
+
+      static void sendEmail(string file)
+      {
+         try
+         {
+            var device = OutputEmailDevice.Create();
+            device.Server = "smtp3";
+            device.Port = 25;
+            device.UserName = "";
+            device.Password = "";
+            device.SenderEmail = "aseguin@telelogos.com";
+
+            var from = "aseguin@telelogos.com";
+            var to = "aseguin@telelogos.com";
+            //MailMessage message = new MailMessage(from, to);
+            //message.From = new MailAddress(Helper.IfNullOrEmpty(from, device.SenderEmail));
+            //device.AddEmailAddresses(message.To, to);
+            //message.Subject = "M4D - Rapport de conformité du " + DateTime.Now.ToLongDateString();
+            //message.Body = "Test d'envoie du rapport de conformité";
+            //message.Attachments.Insert(0, new Attachment(file));
+
+            //device.SmtpClient.Send(message);
+            MailMessage message = new MailMessage(from, to);
+            message.Subject = "M4D - Rapport de conformité du " + DateTime.Now.ToLongDateString();
+            message.Body = "Test d'envoie du rapport de conformité";
+            var smtp = new SmtpClient(device.Server, device.Port);
+            smtp.Send(message);
+         }
+         catch (Exception emailEx)
+         {
+            Helper.WriteLogEntryScheduler(EventLogEntryType.Error, "Error got trying sending notification email.\r\n{0}", emailEx.Message);
+         }
       }
    }
 }
