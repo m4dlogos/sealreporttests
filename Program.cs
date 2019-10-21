@@ -16,29 +16,7 @@ namespace TelelogosGenerationReport
    {
       static void Main(string[] args)
       {
-         Console.WriteLine("Choisir votre format de sortie:");
-         Console.WriteLine("1. HTML");
-         Console.WriteLine("2. Print");
-         Console.WriteLine("3. Pdf");
-         int num = 0;
-         var ok = int.TryParse(Console.ReadLine(), out num);
-         var options = new List<int> { 1, 2, 3 };
-
-         while (options.Contains(num) && ok)
-         {
-            var format = ReportFormat.html;
-           switch (num)
-            {
-               case 1: format = ReportFormat.html; break;
-               case 2: format = ReportFormat.print; break;
-               case 3: format = ReportFormat.pdf; break;
-            }
-
-            ConformityReport(DATA_Statistics, format);
-
-            Console.WriteLine("Générer un autre rapport ? (choisir le format ou appuyer sur une autre touche)\n");
-            ok = int.TryParse(Console.ReadLine(), out num);
-         }
+         GenerateConformityReport(DATA_Statistics, ReportFormat.html);
       }
 
       #region Samples
@@ -126,14 +104,14 @@ namespace TelelogosGenerationReport
 
       #endregion
 
-      public static void ConformityReport(DashboardStatistics data, ReportFormat format)
+      public static void GenerateConformityReport(DashboardStatistics data, ReportFormat format)
       {
          // Create the repository
          var repository = Repository.Create();
 
          // Create No Sql data source
          var source = MetaSource.Create(repository);
-         source.Name = "Telelogos NoSql Data Source";
+         source.Name = "Telelogos Data Source";
          source.IsNoSQL = true;
          source.IsDefault = true;
          foreach (var src in repository.Sources) src.IsDefault = false;
@@ -150,18 +128,23 @@ namespace TelelogosGenerationReport
 
          // Create the report
          Report report = Report.Create(repository);
-         report.DisplayName = "Rapport de conformité des players";
+         report.DisplayName = "Dashboard Report";
 
          // Configure the model's elements
          var model = report.Models[0];
          // Add the result table
          model.ResultTable = new DataTable();
 
-         model.ResultTable.Columns.Add(new DataColumn("Conformite", typeof(string)));
-         model.ResultTable.Columns.Add(new DataColumn("Quantite", typeof(int)));
+         model.ResultTable.Columns.Add(new DataColumn("Indicateur", typeof(string)));
+         model.ResultTable.Columns.Add(new DataColumn("Nom", typeof(string)));
+         model.ResultTable.Columns.Add(new DataColumn("Valeur", typeof(int)));
 
-         model.ResultTable.Rows.Add("Conforme", data.PlayersConformCount);
-         model.ResultTable.Rows.Add("Non conforme", data.PlayersNotConformCount);
+         model.ResultTable.Rows.Add("Conformité", "Conforme", data.PlayersConformCount);
+         model.ResultTable.Rows.Add("Conformité", "Non conforme", data.PlayersNotConformCount);
+         model.ResultTable.Rows.Add("Connexion", "Connecté", data.PlayersActivCount);
+         model.ResultTable.Rows.Add("Connexion", "Injoignable", data.PlayersUnreachableCount);
+         model.ResultTable.Rows.Add("Mise à jour", "A jour", data.PlayersUpToDateCount);
+         model.ResultTable.Rows.Add("Mise à jour", "Non à jour", data.PlayersNotUpToDateCount);
 
          foreach (DataColumn column in model.ResultTable.Columns)
          {
@@ -180,15 +163,25 @@ namespace TelelogosGenerationReport
             var element = ReportElement.Create();
             element.MetaColumnGUID = column.GUID;
 
-            if (column.Name == "Conformite")
+            switch (column.Name)
             {
-               element.PivotPosition = PivotPosition.Row;
-               element.SerieDefinition = SerieDefinition.Axis;
-            }
-            else if (column.Name == "Quantite")
-            {
-               element.PivotPosition = PivotPosition.Data;
-               element.ChartJSSerie = ChartJSSerieDefinition.Pie;
+               case "Indicateur":
+                  {
+                     element.PivotPosition = PivotPosition.Page;
+                  }
+                  break;
+               case "Nom":
+                  {
+                     element.PivotPosition = PivotPosition.Row;
+                     element.SerieDefinition = SerieDefinition.Axis;
+                  }
+                  break;
+               case "Valeur":
+                  {
+                     element.PivotPosition = PivotPosition.Data;
+                     element.ChartJSSerie = ChartJSSerieDefinition.Pie;
+                  }
+                  break;
             }
 
             report.Models[0].Elements.Add(element);
@@ -198,27 +191,31 @@ namespace TelelogosGenerationReport
          model.InitReferences();
 
          // Configure the view
-         var view = report.Views.Find(x => x.ViewName == "View");
-         var viewModel = view.Views.Find(x => x.ViewName == "Model");
-         var container = viewModel.Views.Find(x => x.ViewName == "Model Container");
-         var chartJS = container.Views.Find(x => x.ViewName == "Chart JS");
-         chartJS.InitParameters(false);
-         var paramTitle = chartJS.Parameters.Find(x => x.Name == "chartjs_title");
-         paramTitle.TextValue = "Conformité des players";
-         var paramDoughnut = chartJS.Parameters.Find(x => x.Name == "chartjs_doughnut");
-         paramDoughnut.BoolValue = true;
+         string rootViewName = "View";
+         var view = report.Views.FirstOrDefault(x => x.ViewName == rootViewName);
+         var viewModel = view?.Views.FirstOrDefault(x => x.ViewName == ReportViewTemplate.ModelName);
+         var viewModelContainer = viewModel?.Views.FirstOrDefault(x => x.ViewName == ReportViewTemplate.ModelContainerName);
+         var viewChartJS = viewModelContainer?.Views.FirstOrDefault(x => x.ViewName == ReportViewTemplate.ChartJSName);
+         if (viewChartJS != null)
+         {
+            viewChartJS.InitParameters(false);
+            var paramTitle = viewChartJS.Parameters.FirstOrDefault(x => x.Name == "chartjs_title");
+            paramTitle.TextValue = "Dashboad Report";
+            var paramDoughnut = viewChartJS.Parameters.FirstOrDefault(x => x.Name == "chartjs_doughnut");
+            paramDoughnut.BoolValue = true;
+         }
 
          // Execute the report
          report.RenderOnly = true;
-         report.Format = ReportFormat.pdf;
+         report.Format = format;
          //report.Views[0].PdfConfigurations.Add(getPdfHeaderConfiguration());
-         ReportExecution execution = new ReportExecution() { Report = report };
+         var execution = new ReportExecution() { Report = report };
          execution.Execute();
-         //while (report.IsExecuting) System.Threading.Thread.Sleep(100);
+         while (report.IsExecuting) System.Threading.Thread.Sleep(100);
 
          // Generate the report
-         var outputFile = execution.GeneratePDFResult();
-         sendEmail(outputFile);
+         var outputFile = execution.GeneratePrintResult();
+         //sendEmail(outputFile);
 
          // Show the report
          Process.Start(outputFile);
@@ -227,10 +224,10 @@ namespace TelelogosGenerationReport
       static DashboardStatistics DATA_Statistics = new DashboardStatistics
       {
          PlayersOkCount = 1,
-         PlayersUnreachableCount = 0,
-         PlayersActivCount = 1,
-         PlayersUpToDateCount = 1,
-         PlayersNotUpToDateCount = 0,
+         PlayersUnreachableCount = 20,
+         PlayersActivCount = 80,
+         PlayersUpToDateCount = 70,
+         PlayersNotUpToDateCount = 30,
          PlayersConformCount = 66,
          PlayersNotConformCount = 34,
          PlayerIsInitialized = 2,
