@@ -190,19 +190,22 @@ namespace TelelogosGenerationReport
          source.InitReferences(repository);
          model.InitReferences();
 
-         // Configure the view
          string rootViewName = "View";
-         var view = report.Views.FirstOrDefault(x => x.ViewName == rootViewName);
-         var viewModel = view?.Views.FirstOrDefault(x => x.ViewName == ReportViewTemplate.ModelName);
-         var viewModelContainer = viewModel?.Views.FirstOrDefault(x => x.ViewName == ReportViewTemplate.ModelContainerName);
-         var viewChartJS = viewModelContainer?.Views.FirstOrDefault(x => x.ViewName == ReportViewTemplate.ChartJSName);
+         // Remove no used views
+         var sqlView = report.Views.FirstOrDefault(v => v.Name == "SQL view");
+         if (sqlView != null)
+            report.Views.Remove(sqlView);
+
+         // Configure the view
+         var view = report.Views.FirstOrDefault(p => p.ViewName == rootViewName);
+         var viewModel = view?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ModelName);
+         var viewModelContainer = viewModel?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ModelContainerName);
+         var viewChartJS = viewModelContainer?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ChartJSName);
          if (viewChartJS != null)
          {
             viewChartJS.InitParameters(false);
-            var paramTitle = viewChartJS.Parameters.FirstOrDefault(x => x.Name == "chartjs_title");
-            paramTitle.TextValue = "Dashboad Report";
-            var paramDoughnut = viewChartJS.Parameters.FirstOrDefault(x => x.Name == "chartjs_doughnut");
-            paramDoughnut.BoolValue = true;
+            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_doughnut").BoolValue = true;
+            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_legend_position").TextValue = "bottom";
          }
 
          // Execute the report
@@ -213,6 +216,11 @@ namespace TelelogosGenerationReport
          execution.Execute();
          while (report.IsExecuting) System.Threading.Thread.Sleep(100);
 
+         // Paramétrer la vue Model
+         viewModel.Parameters.FirstOrDefault(p => p.Name == "show_summary_table").BoolValue = false;
+         viewModel.Parameters.FirstOrDefault(p => p.Name == "show_page_tables").BoolValue = false;
+         viewModel.Parameters.FirstOrDefault(p => p.Name == "show_data_tables").BoolValue = false;
+         viewModel.Parameters.FirstOrDefault(p => p.Name == "show_page_separator").BoolValue = false;
          // Generate the report
          var outputFile = execution.GeneratePrintResult();
          //sendEmail(outputFile);
