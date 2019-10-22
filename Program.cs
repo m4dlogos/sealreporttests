@@ -200,6 +200,8 @@ namespace TelelogosGenerationReport
          var view = report.Views.FirstOrDefault(p => p.ViewName == rootViewName);
          var viewModel = view?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ModelName);
          var viewModelContainer = viewModel?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ModelContainerName);
+         viewModelContainer.Views.RemoveAll(v => v.Template.Name != "Test");
+         report.AddChildView(viewModelContainer, "Test");
          var viewChartJS = viewModelContainer?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ChartJSName);
          if (viewChartJS != null)
          {
