@@ -1,0 +1,102 @@
+﻿@using Seal.Model
+@using Seal.Helpers
+@{
+    Report report = Model;
+    ReportView view = report.CurrentView;
+    ReportView modelView = report.CurrentModelView;
+    ReportModel reportModel = modelView.Model;
+    ResultPage page = report.CurrentPage;
+    ResultTable table = page.DataTable;
+    if (view.GetBoolValue("invert_data_tables") && modelView.GetBoolValue("show_data_tables") && !report.ExecutionView.GetBoolValue(Parameter.ServerPaginationParameter))
+    {
+        reportModel.InvertDataTables();
+    }
+}
+
+@if (table != null && table.RowCount > 0 && table.ColumnCount > 0 && modelView.GetBoolValue("show_data_tables"))
+{
+    <script type="text/javascript">
+    $(document).ready(function () {
+        var dt = $('#@("dt_" + view.ViewId+page.PageId)');
+        try {
+            if (dt != null && @Helper.ToJS(view.GetBoolValue("data_tables_enabled")) && !@Helper.ToJS(report.PrintLayout))
+            {
+                var dto = dt.dataTable({
+                responsive: @Helper.ToJS(view.GetBoolValue("data_tables_responsive")),
+                ordering: @Helper.ToJS(view.GetBoolValue("data_tables_sort_enabled")),
+                paging: @Helper.ToJS(view.GetBoolValue("data_tables_pagination_enabled")),
+                lengthMenu: [[10, 25, 50, 100, 500], [10, 25, 50, 100, 500]],
+                pageLength: @(view.GetBoolValue("data_tables_pagination_enabled") ? view.GetValue("data_tables_pagination_size") : "-1"),
+                info: @Helper.ToJS(view.GetBoolValue("data_tables_show_information")),
+                searching: @Helper.ToJS(view.GetBoolValue("data_tables_filter_enabled")),
+                processing: @Helper.ToJS(view.GetBoolValue("data_tables_show_processing")),
+                order: [@Raw(view.GetValue("data_tables_sort_configuration"))],
+                serverSide: @Helper.ToJS(report.IsServerPaginationEnabled && view.GetBoolValue("data_tables_enabled")),
+                @if (report.IsServerPaginationEnabled && view.GetBoolValue("data_tables_enabled"))
+                {<text>
+                        ajax: function(data, callback, settings) {
+                            getTableData($(this), "@report.ExecutionGUID", $(this).attr("viewid"), $(this).attr("pageid"), data, callback, settings);
+                        }
+                </text>}
+                });
+            }
+
+            $('.dataTables_filter input[type="search"]').css(
+                { 'width': '90px', 'display': 'inline-block' }
+            );
+    }
+    catch (e) { };
+    });
+    </script>
+
+    <table id='@("dt_" + view.ViewId+page.PageId)' viewid='@modelView.ViewId' pageid='@page.PageId' @Raw(view.AddAttribute("class", "data_table_class")) @Raw(view.AddAttribute("style", "data_table_css"))>
+        @if (view.HasValue("data_table_caption"))
+        {
+            <caption @Raw(view.AddAttribute("style", "data_table_caption_css"))>@Raw(view.GetHtmlValue("data_table_caption"))</caption>
+        }
+        <thead>
+            @for (int row = 0; row < table.BodyStartRow; row++)
+                {
+                <tr @Raw(view.AddAttribute("class", "data_table_header_class")) @Raw(view.AddAttribute("style", "data_table_header_css"))>
+                    @for (int col = 0; col < table.ColumnCount; col++)
+                    {
+                        if (view.IsColumnHidden(col) || table.IsColumnHidden(col)) { continue; }
+                        ResultCell cell = table[row, col];
+                        <th @Raw(Helper.AddAttribute("class", cell.CellCssClass)) @Raw(Helper.AddAttribute("style", cell.CellCssStyle)) @Raw(reportModel.GetNavigation(cell))>@Raw(cell.HTMLValue)</th>
+                    }
+                </tr>
+            }
+        </thead>
+        @if (!report.IsServerPaginationEnabled || !view.GetBoolValue("data_tables_enabled"))
+        {
+            <text>
+                <tbody>
+                    @for (int row = table.BodyStartRow; row < table.BodyEndRow; row++)
+                    {
+                        <tr @Raw(view.AddAttribute("class", "data_table_" + (table.IsSubTotalRow(row) ? "subtotal" : "body") + "_class")) @Raw(view.AddAttribute("style", "data_table_" + (table.IsSubTotalRow(row) ? "subtotal" : "body") + "_css"))>
+                            @for (int col = 0; col < table.ColumnCount; col++)
+                            {
+                                if (view.IsColumnHidden(col) || table.IsColumnHidden(col)) { continue; }
+                                ResultCell cell = table[row, col];
+                                <td @Raw(Helper.AddAttribute("class", cell.CellCssClass)) @Raw(Helper.AddAttribute("style", cell.CellCssStyle)) @Raw(reportModel.GetNavigation(cell))>@Raw(cell.HTMLValue)</td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </text>
+        }
+        <tfoot>
+            @for (int row = table.BodyEndRow; row < table.Lines.Count; row++)
+                {
+                <tr @Raw(view.AddAttribute("class", "data_table_footer_class")) @Raw(view.AddAttribute("style", "data_table_footer_css"))>
+                    @for (int col = 0; col < table.ColumnCount; col++)
+                    {
+                        if (view.IsColumnHidden(col) || table.IsColumnHidden(col)) { continue; }
+                        ResultCell cell = table[row, col];
+                        <td @Raw(Helper.AddAttribute("class", cell.CellCssClass)) @Raw(Helper.AddAttribute("style", cell.CellCssStyle))>@Raw(cell.HTMLValue)</td>
+                    }
+                </tr>
+            }
+        </tfoot>
+    </table>
+}

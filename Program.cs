@@ -223,6 +223,7 @@ namespace TelelogosGenerationReport
          viewModel.Parameters.FirstOrDefault(p => p.Name == "show_page_tables").BoolValue = false;
          viewModel.Parameters.FirstOrDefault(p => p.Name == "show_data_tables").BoolValue = false;
          viewModel.Parameters.FirstOrDefault(p => p.Name == "show_page_separator").BoolValue = false;
+         viewModel.Parameters.FirstOrDefault(p => p.Name == "pages_layout").TextValue = "col-sm-4;col-sm-4;col-sm-4";
          // Generate the report
          var outputFile = execution.GeneratePrintResult();
          //sendEmail(outputFile);

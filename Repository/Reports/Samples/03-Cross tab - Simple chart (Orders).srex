@@ -1,0 +1,237 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Report xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <GUID>4cc16caf-749a-42e6-a61e-235d763aa5dc</GUID>
+  <Sources>
+    <ReportSource>
+      <GUID>6f5296f5-b91a-4fec-97e2-91f7cac68133</GUID>
+      <Name>Northwind (Repository)</Name>
+      <Connections />
+      <ConnectionGUID>442f6511-a22b-47ec-a33e-e1c7344adb68</ConnectionGUID>
+      <InitScript />
+      <TasksScript />
+      <MetaData>
+        <Tables>
+          <MetaTable>
+            <GUID>55dc8e4b-9040-4547-a15d-3ccc6286f66b</GUID>
+            <Alias>SealMasterTable</Alias>
+            <DynamicColumns>true</DynamicColumns>
+            <MustRefresh>false</MustRefresh>
+            <Columns />
+          </MetaTable>
+        </Tables>
+        <Joins />
+        <Enums />
+      </MetaData>
+      <MetaSourceGUID>52833575-11ae-4b7d-8b5e-0f9b29d1267a</MetaSourceGUID>
+    </ReportSource>
+  </Sources>
+  <Models>
+    <ReportModel>
+      <GUID>8fa6077e-85b0-4ed7-b838-8e70b1e2a4bb</GUID>
+      <Name>model</Name>
+      <SourceGUID>6f5296f5-b91a-4fec-97e2-91f7cac68133</SourceGUID>
+      <SqlSelect />
+      <SqlFrom />
+      <SqlGroupBy />
+      <SqlOrderBy />
+      <IgnorePrePostError>false</IgnorePrePostError>
+      <ForceJoinTableGUID />
+      <AvoidJoinTableGUID />
+      <Elements>
+        <ReportElement>
+          <GUID>3e8c1b78-2884-4638-ae2c-80b8ab544abe</GUID>
+          <Name>DatePart('yyyy',[Orders.OrderDate],1,0)</Name>
+          <Category>Master</Category>
+          <Tag />
+          <Format>yyyy</Format>
+          <HasHTMLTags>false</HasHTMLTags>
+          <DrillChildren />
+          <SubReports />
+          <PivotPosition>Page</PivotPosition>
+          <Nvd3Serie>ScatterChart</Nvd3Serie>
+          <MetaColumnGUID>64369c69-f298-466f-a241-d7388b2b0e80</MetaColumnGUID>
+        </ReportElement>
+        <ReportElement>
+          <GUID>32f79895-2da2-4b75-a2d8-36e73707e925</GUID>
+          <Name>Products.CategoryID</Name>
+          <Category>Master</Category>
+          <Tag />
+          <Format>N0</Format>
+          <HasHTMLTags>false</HasHTMLTags>
+          <DrillChildren />
+          <SubReports />
+          <PivotPosition>Column</PivotPosition>
+          <AggregateFunction>Count</AggregateFunction>
+          <SerieDefinition>Axis</SerieDefinition>
+          <Nvd3Serie>ScatterChart</Nvd3Serie>
+          <MetaColumnGUID>f1ca9f05-b6a3-46da-b753-68cb4056cb66</MetaColumnGUID>
+        </ReportElement>
+        <ReportElement>
+          <GUID>53402a75-0948-44bc-8d4e-b1c89eeb6001</GUID>
+          <Name>Customers.Country</Name>
+          <Category>Master</Category>
+          <Tag />
+          <Format />
+          <HasHTMLTags>false</HasHTMLTags>
+          <DrillChildren />
+          <SubReports />
+          <PivotPosition>Row</PivotPosition>
+          <AggregateFunction>Count</AggregateFunction>
+          <SerieDefinition>Splitter</SerieDefinition>
+          <Nvd3Serie>ScatterChart</Nvd3Serie>
+          <MetaColumnGUID>20ed0b7a-87dd-4aaa-8d48-feab848e396b</MetaColumnGUID>
+        </ReportElement>
+        <ReportElement>
+          <GUID>318e4a99-855d-4c84-aa77-f45b5439b8d9</GUID>
+          <Name>(1-Discount)*[Order Details].Quantity*[Order Details].UnitPrice</Name>
+          <Category>Master</Category>
+          <Tag />
+          <DisplayName />
+          <Format>N0</Format>
+          <HasHTMLTags>false</HasHTMLTags>
+          <DrillChildren />
+          <SubReports />
+          <PivotPosition>Data</PivotPosition>
+          <ShowTotal>RowColumn</ShowTotal>
+          <SerieDefinition>NVD3Serie</SerieDefinition>
+          <ChartJSSerie>Bar</ChartJSSerie>
+          <MetaColumnGUID>067548ce-bc83-48b8-8212-aa359bd12f9b</MetaColumnGUID>
+        </ReportElement>
+      </Elements>
+      <Restriction />
+      <Restrictions />
+      <AggregateRestriction />
+      <AggregateRestrictions />
+    </ReportModel>
+  </Models>
+  <Outputs />
+  <Tasks />
+  <TasksScript />
+  <Views>
+    <ReportView>
+      <GUID>2194db7c-bdea-459c-b055-d2e630d7f829</GUID>
+      <Name>view</Name>
+      <Views>
+        <ReportView>
+          <GUID>d8cb2182-2ec0-48d7-8659-68002b6b35f9</GUID>
+          <Name>Model HTML View</Name>
+          <Views>
+            <ReportView>
+              <GUID>f1f9b36c-5f47-47e0-93f2-aa08865dccd0</GUID>
+              <Name>Model Container</Name>
+              <Views>
+                <ReportView>
+                  <GUID>1b8d9cb1-0b51-43eb-a99e-111af8062616</GUID>
+                  <Name>Page Table</Name>
+                  <Views />
+                  <TemplateName>Page Table</TemplateName>
+                  <PartialTemplates />
+                  <Parameters />
+                  <CultureName />
+                  <SortOrder>1</SortOrder>
+                  <WebExec>true</WebExec>
+                  <PdfConfigurations />
+                  <ExcelConfigurations />
+                </ReportView>
+                <ReportView>
+                  <GUID>fe81614a-17b3-4f9e-b3f7-86e0b337052e</GUID>
+                  <Name>Chart JS</Name>
+                  <Views />
+                  <TemplateName>Chart JS</TemplateName>
+                  <PartialTemplates />
+                  <Parameters />
+                  <CultureName />
+                  <SortOrder>2</SortOrder>
+                  <WebExec>true</WebExec>
+                  <PdfConfigurations />
+                  <ExcelConfigurations />
+                </ReportView>
+                <ReportView>
+                  <GUID>a6be3fb0-f5be-40a6-a82c-836f0a0fb6a7</GUID>
+                  <Name>Chart NVD3</Name>
+                  <Views />
+                  <TemplateName>Chart NVD3</TemplateName>
+                  <PartialTemplates />
+                  <Parameters />
+                  <CultureName />
+                  <SortOrder>3</SortOrder>
+                  <WebExec>true</WebExec>
+                  <PdfConfigurations />
+                  <ExcelConfigurations />
+                </ReportView>
+                <ReportView>
+                  <GUID>60f8243c-fda3-4243-9be3-489826f90123</GUID>
+                  <Name>Chart Plotly</Name>
+                  <Views />
+                  <TemplateName>Chart Plotly</TemplateName>
+                  <PartialTemplates />
+                  <Parameters />
+                  <CultureName />
+                  <SortOrder>4</SortOrder>
+                  <WebExec>true</WebExec>
+                  <PdfConfigurations />
+                  <ExcelConfigurations />
+                </ReportView>
+                <ReportView>
+                  <GUID>a27ab27a-b0ae-4a85-9532-5054d0536f7b</GUID>
+                  <Name>Data Table</Name>
+                  <Views />
+                  <TemplateName>Data Table</TemplateName>
+                  <PartialTemplates />
+                  <Parameters />
+                  <CultureName />
+                  <SortOrder>5</SortOrder>
+                  <WebExec>true</WebExec>
+                  <PdfConfigurations />
+                  <ExcelConfigurations />
+                </ReportView>
+              </Views>
+              <TemplateName>Model Container</TemplateName>
+              <PartialTemplates />
+              <Parameters />
+              <CultureName />
+              <SortOrder>1</SortOrder>
+              <WebExec>true</WebExec>
+              <PdfConfigurations />
+              <ExcelConfigurations />
+            </ReportView>
+          </Views>
+          <ModelGUID>8fa6077e-85b0-4ed7-b838-8e70b1e2a4bb</ModelGUID>
+          <TemplateName>Model</TemplateName>
+          <CustomTemplate />
+          <PartialTemplates />
+          <Parameters>
+            <Parameter>
+              <Name>print_break_after_page</Name>
+              <Value>True</Value>
+            </Parameter>
+          </Parameters>
+          <CultureName />
+          <SortOrder>1</SortOrder>
+          <WebExec>true</WebExec>
+          <PdfConfigurations />
+          <ExcelConfigurations />
+        </ReportView>
+      </Views>
+      <ModelGUID />
+      <TemplateName>Report</TemplateName>
+      <CustomTemplate />
+      <PartialTemplates />
+      <Parameters>
+        <Parameter>
+          <Name>force_execution</Name>
+          <Value>True</Value>
+        </Parameter>
+      </Parameters>
+      <CultureName />
+      <SortOrder>0</SortOrder>
+      <WebExec>true</WebExec>
+      <PdfConfigurations />
+      <ExcelConfigurations />
+    </ReportView>
+  </Views>
+  <DisplayName />
+  <InitScript />
+  <ViewGUID>2194db7c-bdea-459c-b055-d2e630d7f829</ViewGUID>
+  <Schedules />
+</Report>

@@ -1,0 +1,53 @@
+The copyright in this software ("the Software" is the PDF and Excel Converter Library) is owned by Ariacom SARL ("the Owner"). 
+This is a license agreement between "the Owner" and "You". 
+You may not load the Software into any computer or copy it without the license of the Owner. The Owner offers you a non-exclusive license on the terms of this Agreement.
+
+You are permitted to load the Software and use it only on a computer which is under the control of your company, unless a Redistributable License has been purchased.
+
+You are not permitted to rent, lease, sub-license, loan, copy (except as expressly provided in this Agreement), modify, adapt, merge, translate, reverse engineer, decompile, disassemble, create derivative works, create wrappers or general purpose online services duplicating a whole or a part of the development library functionality based on the whole or any part of the Software or its associated documentation or otherwise attempt to discover the source code of the Software.
+You are not permitted to distribute any part of the Software as part of any software development system without the Owners express written permission.
+You are not permitted to create commercial or for personal use derivative products competing with the Software without the Owner express written permission. 
+If you are not sure if a product is in competition with the Owner products you must contact the Owner for clarifications. 
+
+License Descriptions:
+PDF and Excel Converter Standard License 
+Installation of the PDF and Excel Converter component on one single physical machine within your organization.
+The Standard License cannot be redistributed in an application that you distribute to your own customers.
+Download of the last PDF and Excel Converter updates for a duration of one year.
+Direct support by email for a duration of one year.
+
+PDF and Excel Converter Enterprise License 
+Installation of the PDF and Excel Converter component on an unlimited number of machines within your organization.
+The Enterprise License cannot be redistributed in an application that you distribute to your own customers.
+Download of the last PDF and Excel Converter updates for a duration of one year.
+Direct support by email for a duration of one year.
+
+PDF and Excel Converter Redistributable License 
+Installation of the PDF and Excel Converter component on an unlimited number of machines within your organization.
+The Redistributable License can be included in your own applications that you distribute to your own customers.
+Download of the last PDF and Excel Converter updates for a duration of one year.
+Direct support by email for a duration of one year.
+
+Warranties
+The Owner warrants that the Software will perform substantially in accordance with its accompanying documentation (provided that the Software is properly used on the computer and with the operating system for which it was designed) and that the documentation correctly describes the operation of the Software in all material respects. 
+If the Owner is notified of significant errors during the Warranty Period it will correct any such demonstrable errors in the Software or its documentation within a reasonable time or (at its option) provide or authorize a refund of the price of the Software (against return of the Software and its documentation). 
+The express terms of this Agreement are in lieu of all warranties, conditions, undertakings, terms and obligations implied by statute, common law, trade usage, course of dealing or otherwise all of which are hereby excluded to the fullest extent permitted by law. 
+The Owner does not warrant that the Software will meet your requirements or that the operation of the Software will be uninterrupted or error-free or that defects in the Software will be corrected. 
+You shall load and use the Software at your own risk and in no event will the Owner be liable to you for any loss or damage of any kind (except personal injury or death resulting from the Owner's negligence) including lost profits or other consequential loss arising from your use of or inability to use the Software or from errors or deficiencies in it whether caused by negligence or otherwise except as expressly provided herein. 
+All other warranties are disclaimed, to the extent permitted by applicable law, by the Owner and all other parties. 
+
+Acceptance
+You shall be deemed to have accepted the terms of this Agreement by loading the Software into any computer. 
+
+Term
+This license is effective until you terminate it by destroying the Software and its documentation together with all copies. 
+It will also terminate if you fail to abide by this Agreement. Upon termination you agree to destroy all copies of the Software and its documentation including any Software stored on the hard disk of any computer under your control. 
+
+Ownership
+The Owner shall at all times retain ownership of the Software and all subsequent copies thereof regardless of form. 
+This Agreement applies to the grant of the license only and not to the contract of sale of the Software. The Owner's warranties under this Agreement are available only to the original licensed user. 
+
+Law
+This Agreement shall be governed by the laws of Switzerland. 
+
+(C) Copyright 2019 ARIACOM SARL. All rights reserved.

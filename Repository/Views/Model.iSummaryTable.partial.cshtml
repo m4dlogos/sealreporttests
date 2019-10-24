@@ -1,0 +1,62 @@
+﻿@using Seal.Model
+@using Seal.Helpers
+@{
+    ReportView view = Model;
+    ReportModel reportModel = view.Model;
+    Report report = view.Report;
+}
+
+@helper SummaryRows(ReportModel reportModel, ReportView view, int rowStart, int rowEnd, bool isHead, string trClass)
+{
+for (int row = rowStart; row < rowEnd; row++)
+{
+        <tr @Raw(Helper.AddAttribute("class", trClass))>
+            @for (int col = 0; col < reportModel.SummaryTable.ColumnCount; col++)
+            {
+                ResultCell cell = reportModel.SummaryTable[row, col];
+                if (!view.GetBoolValue("display_summary_totals") && cell.IsTotal)
+                {
+                    continue;
+                }
+                if (isHead)
+                {
+                    <th @Raw(Helper.AddAttribute("class", cell.CellCssClass)) @Raw(Helper.AddAttribute("style", cell.CellCssStyle)) @Raw(reportModel.GetNavigation(cell))>
+                        @Raw(cell.HTMLValue)
+                    </th>
+                }
+                else
+                {
+                    <td @Raw(Helper.AddAttribute("class", cell.CellCssClass)) @Raw(Helper.AddAttribute("style", cell.CellCssStyle)) @Raw(reportModel.GetNavigation(cell))>
+                        @Raw(cell.HTMLValue)
+                    </td>
+                }
+            }
+        </tr>
+}
+}
+
+<text>
+    <table @Raw(view.AddAttribute("class", "summary_table_class")) @Raw(view.AddAttribute("style", "summary_table_css"))>
+        @if (view.HasValue("summary_table_caption"))
+        {
+            <caption @Raw(view.AddAttribute("style", "summary_table_caption_css"))>@Raw(view.GetHtmlValue("summary_table_caption"))</caption>
+        }
+        <thead>
+            @SummaryRows(reportModel, view, 0, 1, true, "tr-totals")
+        </thead>
+        <tbody>
+            @SummaryRows(reportModel, view, reportModel.SummaryTable.BodyStartRow, reportModel.SummaryTable.BodyEndRow, false, "")
+        </tbody>
+        @if (view.GetBoolValue("add_summary_totals_totals") && view.GetBoolValue("display_summary_totals") && reportModel.HasTotals)
+            {
+            <tfoot>
+                @SummaryRows(reportModel, view, reportModel.SummaryTable.BodyEndRow, reportModel.SummaryTable.RowCount, false, "tr-totals")
+            </tfoot>
+        }
+    </table>
+
+    @if (view.GetBoolValue("show_page_separator"))
+    {
+    <hr style="display: block;" />
+    }
+</text>
