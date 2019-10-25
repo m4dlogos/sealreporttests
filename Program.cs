@@ -200,14 +200,18 @@ namespace TelelogosGenerationReport
          var view = report.Views.FirstOrDefault(p => p.ViewName == rootViewName);
          var viewModel = view?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ModelName);
          var viewModelContainer = viewModel?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ModelContainerName);
-         viewModelContainer.Views.RemoveAll(v => v.Template.Name != "Test");
-         report.AddChildView(viewModelContainer, "Test");
-         var viewChartJS = viewModelContainer?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ChartJSName);
+         viewModelContainer.Views.RemoveAll(v => v.Template.Name != "M4D_Dashboard");
+         report.AddChildView(viewModelContainer, "M4D_Dashboard");
+         var viewChartJS = viewModelContainer?.Views.FirstOrDefault(p => p.ViewName == "M4D_Dashboard");
          if (viewChartJS != null)
          {
             viewChartJS.InitParameters(false);
             viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_doughnut").BoolValue = true;
+            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_show_legend").BoolValue = true;
             viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_legend_position").TextValue = "bottom";
+            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_colors").Value = "['#ea6153','#10BE5D']";
+            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_circumference").Value = "1.25*Math.PI";
+            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_rotation").Value = "0.5*Math.PI";
          }
 
          // Execute the report

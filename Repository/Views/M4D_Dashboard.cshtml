@@ -18,9 +18,11 @@
     if (modelView.InitPageChart(page))
     {
         string chartType = reportModel.ExecChartJSType;
+		bool doughnutWithText = false;
         if (chartType == "pie" && view.GetBoolValue("chartjs_doughnut"))
         {
             chartType = "doughnut";
+			doughnutWithText = view.GetBoolValue("chartjs_doughnut_with_text");
         }
         else if (chartType == "bar" && view.GetBoolValue("chartjs_bar_horizontal"))
         {
@@ -75,7 +77,8 @@
                         @view.GetValue("chartjs_padding")
                     }
                 },
-				circumference: 1.25*Math.PI,
+				circumference: @Raw(view.GetParameter("chartjs_options_circumference").Value),
+				rotation: @Raw(view.GetParameter("chartjs_options_rotation").Value),
                 tooltips: {
                     callbacks: {
                         label: function (tooltipItem, data) {
@@ -184,27 +187,28 @@
                 }
             };
 
-                var @chartId = new Chart(ctx, {
-                    type: '@chartType',
-                    data: data,
-                    options: options
-                });
+			var @chartId = new Chart(ctx, {
+				type:'doughnutWithText', // '@chartType',
+				data: data,
+				options: options
+			});
                 // Navigation
-                if (@Helper.ToJS(report.GenerateHTMLDisplay)) {
-                    $("#@chartId").click(
-                        function (evt) {
-                            var points = @(chartId).getElementsAtEvent(evt);
-                            if (points && points.length > 0) {
-                                var index = points[0]["_index"];
-                                var label = @(chartId).data.labels[index];
-                                var value = @(chartId).data.datasets[0].data[index];
-                                var nav = @(chartId).data.navigations[index];
-                                if (nav) showPopupNavMenu(evt, nav, true);
-                            }
-                        }
-                    );
-                }
-            });//document.ready
+			if (@Helper.ToJS(report.GenerateHTMLDisplay)) {
+				$("#@chartId").click(
+					function (evt) {
+						var points = @(chartId).getElementsAtEvent(evt);
+						if (points && points.length > 0) {
+							var index = points[0]["_index"];
+							var label = @(chartId).data.labels[index];
+							var value = @(chartId).data.datasets[0].data[index];
+							var nav = @(chartId).data.navigations[index];
+							if (nav) showPopupNavMenu(evt, nav, true);
+						}
+					}
+				);
+			}
+        });//document.ready
+			
         </script>
         chartOk = true;
     }

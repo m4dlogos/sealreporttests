@@ -52,6 +52,7 @@
     @if (report.HasChartJSChart)
     {
         @Raw(report.AttachScriptFile("Chart.min.js", "https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js"))
+		@Raw(report.AttachScriptFile("Chart.ext.js"))
     }
 
     @if (report.HasPlotlyChart)
