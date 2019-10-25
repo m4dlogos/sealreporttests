@@ -1,4 +1,5 @@
-﻿using Seal.Helpers;
+﻿using Seal.Converter;
+using Seal.Helpers;
 using Seal.Model;
 using System;
 using System.Collections.Generic;
@@ -7,8 +8,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Mail;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace TelelogosGenerationReport
 {
@@ -104,8 +103,44 @@ namespace TelelogosGenerationReport
 
       #endregion
 
+      public const string RootViewName = "View";
+
+      public static void AddModel(string name, Report report, DataTable table)
+      {
+         var model = report.AddModel(false);
+         model.Name = name;
+         model.ResultTable = table;
+      }
+
+      public static DataTable GetResultTable(DashboardStatistics data, string modelName)
+      {
+         var resultTable = new DataTable();
+         resultTable.Columns.Add(new DataColumn("Nom", typeof(string)));
+         resultTable.Columns.Add(new DataColumn("Valeur", typeof(int)));
+
+         if (modelName == "ConformiteModel")
+         {
+            resultTable.Rows.Add("Conforme", data.PlayersConformCount);
+            resultTable.Rows.Add("Non conforme", data.PlayersNotConformCount);
+         }
+         else if (modelName == "ConnexionModel")
+         {
+            resultTable.Rows.Add("Connecté", data.PlayersOkCount);
+            resultTable.Rows.Add("Injoignable", data.PlayersUnreachableCount);
+         }
+         else if (modelName == "MajModel")
+         {
+            resultTable.Rows.Add("Conforme", 10);
+            resultTable.Rows.Add("Non conforme", 11);
+         }
+
+         return resultTable;
+      }
+
       public static void GenerateConformityReport(DashboardStatistics data, ReportFormat format)
       {
+         // Configure Razor Engine
+         RazorHelper.SetDebugMode(true);
          // Create the repository
          var repository = Repository.Create();
 
@@ -130,21 +165,19 @@ namespace TelelogosGenerationReport
          Report report = Report.Create(repository);
          report.DisplayName = "Dashboard Report";
 
+         report.Models.RemoveAll(m => m != null);
+         report.Views.RemoveAll(v => v.Name != RootViewName);
+
          // Configure the model's elements
          var model = report.Models[0];
          // Add the result table
-         model.ResultTable = new DataTable();
+         var resultTable = new DataTable();
 
-         model.ResultTable.Columns.Add(new DataColumn("Indicateur", typeof(string)));
-         model.ResultTable.Columns.Add(new DataColumn("Nom", typeof(string)));
-         model.ResultTable.Columns.Add(new DataColumn("Valeur", typeof(int)));
+         resultTable.Columns.Add(new DataColumn("Nom", typeof(string)));
+         resultTable.Columns.Add(new DataColumn("Valeur", typeof(int)));
 
-         model.ResultTable.Rows.Add("Conformité", "Conforme", data.PlayersConformCount);
-         model.ResultTable.Rows.Add("Conformité", "Non conforme", data.PlayersNotConformCount);
-         model.ResultTable.Rows.Add("Connexion", "Connecté", data.PlayersActivCount);
-         model.ResultTable.Rows.Add("Connexion", "Injoignable", data.PlayersUnreachableCount);
-         model.ResultTable.Rows.Add("Mise à jour", "A jour", data.PlayersUpToDateCount);
-         model.ResultTable.Rows.Add("Mise à jour", "Non à jour", data.PlayersNotUpToDateCount);
+         model.ResultTable.Rows.Add("Conforme", 10);
+         model.ResultTable.Rows.Add("Non conforme", 11);
 
          foreach (DataColumn column in model.ResultTable.Columns)
          {
@@ -165,21 +198,20 @@ namespace TelelogosGenerationReport
 
             switch (column.Name)
             {
-               case "Indicateur":
-                  {
-                     element.PivotPosition = PivotPosition.Page;
-                  }
-                  break;
                case "Nom":
                   {
                      element.PivotPosition = PivotPosition.Row;
                      element.SerieDefinition = SerieDefinition.Axis;
+                     element.SerieSortType = SerieSortType.None;
+                     element.SortOrder = SortOrderConverter.kNoSortKeyword;
                   }
                   break;
                case "Valeur":
                   {
                      element.PivotPosition = PivotPosition.Data;
                      element.ChartJSSerie = ChartJSSerieDefinition.Pie;
+                     element.SerieSortType = SerieSortType.None;
+                     element.SortOrder = SortOrderConverter.kNoSortKeyword;
                   }
                   break;
             }
@@ -190,14 +222,14 @@ namespace TelelogosGenerationReport
          source.InitReferences(repository);
          model.InitReferences();
 
-         string rootViewName = "View";
+         
          // Remove no used views
          var sqlView = report.Views.FirstOrDefault(v => v.Name == "SQL view");
          if (sqlView != null)
             report.Views.Remove(sqlView);
 
          // Configure the view
-         var view = report.Views.FirstOrDefault(p => p.ViewName == rootViewName);
+         var view = report.Views.FirstOrDefault(p => p.ViewName == RootViewName);
          var viewModel = view?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ModelName);
          var viewModelContainer = viewModel?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ModelContainerName);
          viewModelContainer.Views.RemoveAll(v => v.Template.Name != "M4D_Dashboard");
@@ -209,7 +241,7 @@ namespace TelelogosGenerationReport
             viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_doughnut").BoolValue = true;
             viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_show_legend").BoolValue = true;
             viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_legend_position").TextValue = "bottom";
-            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_colors").Value = "['#ea6153','#10BE5D']";
+            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_colors").Value = "['#10BE5D','#ea6153']";
             viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_circumference").Value = "1.25*Math.PI";
             viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_rotation").Value = "0.5*Math.PI";
          }

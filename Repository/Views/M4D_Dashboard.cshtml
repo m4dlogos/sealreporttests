@@ -22,41 +22,34 @@
         if (chartType == "pie" && view.GetBoolValue("chartjs_doughnut"))
         {
             chartType = "doughnut";
-			doughnutWithText = view.GetBoolValue("chartjs_doughnut_with_text");
+			if (view.GetBoolValue("chartjs_doughnut_with_text"))
+			{
+				chartType = "doughnutWithText";
+			}
         }
-        else if (chartType == "bar" && view.GetBoolValue("chartjs_bar_horizontal"))
-        {
-            chartType = "horizontalBar";
-        }
-        <div class="chart-container" style="page-break-inside:avoid; @(view.GetBoolValue("chartjs_responsive") ? "position:relative;" : "") @Helper.AddIfNotEmpty("width:", view.GetValue("chartjs_contwidth"), ";")@Helper.AddIfNotEmpty("height:", view.GetValue("chartjs_contheight"), ";")">
-            <canvas id="@chartId" @Raw(Helper.AddIfNotEmpty("width='", view.GetValue("chartjs_width"), "'")) @Raw(Helper.AddIfNotEmpty("height='", view.GetValue("chartjs_height"), "'"))></canvas>
-        </div>
+        
+		<div class="chart-container" style="page-break-inside:avoid; @(view.GetBoolValue("chartjs_responsive") ? "position:relative;" : "") @Helper.AddIfNotEmpty("width:", view.GetValue("chartjs_contwidth"), ";")@Helper.AddIfNotEmpty("height:", view.GetValue("chartjs_contheight"), ";")">
+			<canvas id="@chartId" @Raw(Helper.AddIfNotEmpty("width='", view.GetValue("chartjs_width"), "'")) @Raw(Helper.AddIfNotEmpty("height='", view.GetValue("chartjs_height"), "'"))></canvas>
+		</div>
         <script>
             $(document).ready(function () {
             var ctx = $("#@chartId");
-            var colors = d3.scale.category@((reportModel.ExecChartJSType == "pie" || reportModel.ExecChartJSType == "polarArea" ? page.PrimaryXDimensions.Count : page.Series.Count) <= 10 ? "1" : "2")0().range();
-            colors = @Raw(view.GetValue("chartjs_colors") != "d3" ? view.GetValue("chartjs_colors") : "colors");
             var data = {
                 labels: [@Raw(page.ChartXLabels)],
-                navigations: [@Raw(page.ChartNavigations)],
                 datasets: [
-                    @foreach (ResultSerie serie in page.Series.Where(i => i.Element.ChartJSSerie != ChartJSSerieDefinition.None).OrderBy(i => i, new ResultSerieComparer()))
-                    {
-                        <text>
-                    {
-                        @Raw(chartType != "horizontalBar" && reportModel.ExecChartJSType != "pie" && chartType != "polarArea" && chartType != "radar" ? "type: '" + serie.Element.ChartJSSerie.ToString().ToLower() + "'," : "")
-                        labels: [@Raw(page.ChartXLabels)],
-                        label: '@Raw(Helper.ToJS(serie.SerieDisplayName))',
-                        data: [@Raw(reportModel.ExecChartJSType == "pie" || reportModel.ExecChartJSType == "polarArea" || reportModel.ExecChartJSType == "radar" ? serie.ChartYSerieValues : (chartType != "horizontalBar" ? serie.ChartXYSerieValues: serie.ChartYXSerieValues))],
-                        borderColor: colors@(reportModel.ExecChartJSType == "pie" || reportModel.ExecChartJSType == "polarArea" ? "" : "[" + serieIndex + "]"),
-                        backgroundColor: colors@(reportModel.ExecChartJSType == "pie" || reportModel.ExecChartJSType == "polarArea" ? "" : "[" + serieIndex++ + "]"),
-                        borderWidth: 1,
-                        pointRadius: @Raw(view.GetValue("chartjs_point_radius")),
-                        steppedLine: @Raw(view.GetValue("chartjs_stepped_line")),
-                        fill: @Raw(view.GetValue("chartjs_fill")),
-                        @(chartType == "horizontalBar" ? "x" : "y")AxisID: 'yaxis-@(serie.Element.YAxisType == AxisType.Secondary ? 2 : 1)'
-                    },
-                        </text>
+                    @{
+						var serie = page.Series.FirstOrDefault(i => i.Element.ChartJSSerie != ChartJSSerieDefinition.None);
+						if (serie != null)
+						{
+							<text>
+							{
+								labels: [@Raw(page.ChartXLabels)],
+								label: '@Raw(Helper.ToJS(serie.SerieDisplayName))',
+								data: [@Raw(serie.ChartYSerieValues)],
+								backgroundColor: @Raw(view.GetValue("chartjs_colors"))								
+							},
+							</text>
+						}
                     }
                 ]
             };
@@ -87,12 +80,12 @@
                             var tooltipData = allData[tooltipItem.index];
                             var format = (data.datasets[tooltipItem.datasetIndex].yAxisID == 'yaxis-2' ? '@reportModel.ExecD3SecondaryYAxisFormat' : '@reportModel.ExecD3PrimaryYAxisFormat');
                             var isDate = (data.datasets[tooltipItem.datasetIndex].yAxisID == 'yaxis-2' ? @Helper.ToJS(reportModel.ExecAxisSecondaryYIsDateTime) : @Helper.ToJS(reportModel.ExecAxisPrimaryYIsDateTime));
-                            var val = tooltipItem.@(chartType == "horizontalBar" ? "x" : "y")Label;
+                            var val = tooltipItem.@("y")Label;
                             var valStr = "";
                             if (isDate) valStr = d3.time.format(format)(new Date(val));
                             else valStr = d3.format(format)(Number(val)).valueFormat();
 
-                            @if (reportModel.ExecChartJSType == "pie" || reportModel.ExecChartJSType == "polarArea")
+                            @if (reportModel.ExecChartJSType == "pie")
                             {
                                 <text>
                                 var total = 0;
@@ -105,12 +98,6 @@
                                 return tooltipLabel + ': ' + valStr;
                                 </text>
                             }
-                            else if (reportModel.ExecChartJSType == "scatter")
-                            {
-                                <text>
-                                return data.labels[tooltipItem.index] + ': ' + valStr;
-                                </text>
-                            }
                             else
                             {
                                 <text>
@@ -119,76 +106,11 @@
                             }
                         }
                     }
-                },
-                @if (reportModel.ExecChartJSType != "pie" && reportModel.ExecChartJSType != "polarArea" && reportModel.ExecChartJSType != "radar")
-                {
-                <text>
-                scales: {
-                    @(chartType != "horizontalBar" ? "x" : "y")Axes: [{
-                        offset: true,
-                        display: @Helper.ToJS(view.GetBoolValue("chartjs_show_xaxis")),
-                        stacked: @Helper.ToJS(reportModel.ExecChartJSType == "bar" && view.GetBoolValue("chartjs_bar_stacked")),
-                        @if (reportModel.ExecChartIsDateTimeAxis) {
-                            <text>
-                                    type: 'time',
-                                    time: {
-                                        format: '@reportModel.ExecMomentJSXAxisFormat',
-                                        tooltipFormat: '@reportModel.ExecMomentJSXAxisFormat',
-                                        unit: '@view.GetValue("chartjs_unit")',
-                                        stepSize: '@view.GetValue("chartjs_step_size")',
-                                        displayFormats: {
-                                            'second': '@reportModel.ExecMomentJSXAxisFormat',
-                                            'minute': '@reportModel.ExecMomentJSXAxisFormat',
-                                            'hour': '@reportModel.ExecMomentJSXAxisFormat',
-                                            'day': '@reportModel.ExecMomentJSXAxisFormat',
-                                            'week': '@reportModel.ExecMomentJSXAxisFormat',
-                                            'month': '@reportModel.ExecMomentJSXAxisFormat',
-                                            'quarter': '@reportModel.ExecMomentJSXAxisFormat',
-                                            'year': '@reportModel.ExecMomentJSXAxisFormat',
-                                        }
-                                    }
-                            </text>
-                            }
-                        }],
-                    @(chartType != "horizontalBar" ? "y" : "x")Axes: [
-                        @if (reportModel.HasPrimaryYAxis) {
-                            <text>
-                                {
-                                id: 'yaxis-1',
-                                display: @Helper.ToJS(view.GetBoolValue("chartjs_show_yaxis")),
-                                stacked: @Helper.ToJS(reportModel.ExecChartJSType == "bar" && view.GetBoolValue("chartjs_bar_stacked")),
-                                ticks: {
-                                    callback: function (label, index, labels) {
-                                        if (@Helper.ToJS(reportModel.ExecAxisPrimaryYIsDateTime)) return d3.time.format('@reportModel.ExecD3PrimaryYAxisFormat')(new Date(label));
-                                        return d3.format('@reportModel.ExecD3PrimaryYAxisFormat')(label).valueFormat();
-                                        }
-                                    }
-                                },
-                            </text>
-                        }
-                        @if (reportModel.HasSecondaryYAxis) {
-                            <text>
-                                {
-                                id: 'yaxis-2',
-                                display: @Helper.ToJS(view.GetBoolValue("chartjs_show_yaxis")),
-                                position: 'right',
-                                ticks: {
-                                    callback: function(label, index, labels) {
-                                        if (@Helper.ToJS(reportModel.ExecAxisSecondaryYIsDateTime)) return d3.time.format('@reportModel.ExecD3SecondaryYAxisFormat')(new Date(label));
-                                        return d3.format('@reportModel.ExecD3SecondaryYAxisFormat')(label).valueFormat();
-                                        }
-                                    }
-                                },
-                            </text>
-                        }
-                    ]
-                }
-                </text>
                 }
             };
 
 			var @chartId = new Chart(ctx, {
-				type:'doughnutWithText', // '@chartType',
+				type: '@chartType',
 				data: data,
 				options: options
 			});
