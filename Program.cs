@@ -105,167 +105,207 @@ namespace TelelogosGenerationReport
 
       public const string RootViewName = "View";
 
-      public static void AddModel(string name, Report report, DataTable table)
+      public static void AddModel(string modelName, Report report, MetaTable master, DashboardStatistics data)
       {
-         var model = report.AddModel(false);
-         model.Name = name;
-         model.ResultTable = table;
-      }
+			var model = report.AddModel(false);
+			model.Name = modelName;
+			model.ResultTable = GetResultTable(modelName, data);
 
-      public static DataTable GetResultTable(DashboardStatistics data, string modelName)
+			foreach (var column in master.Columns)
+			{
+				var element = ReportElement.Create();
+				element.MetaColumnGUID = column.GUID;
+
+				switch (column.Name)
+				{
+					case "Nom":
+						{
+							element.PivotPosition = PivotPosition.Row;
+							element.SerieDefinition = SerieDefinition.Axis;
+							element.SerieSortType = SerieSortType.None;
+							element.SortOrder = SortOrderConverter.kNoSortKeyword;
+						}
+						break;
+					case "Valeur":
+						{
+							element.PivotPosition = PivotPosition.Data;
+							element.ChartJSSerie = ChartJSSerieDefinition.Pie;
+							element.SerieSortType = SerieSortType.None;
+							element.SortOrder = SortOrderConverter.kNoSortKeyword;
+						}
+						break;
+				}
+
+				model.Elements.Add(element);
+			}
+
+			model.InitReferences();
+		}
+
+      public static DataTable GetResultTable(string modelName, DashboardStatistics data)
       {
-         var resultTable = new DataTable();
-         resultTable.Columns.Add(new DataColumn("Nom", typeof(string)));
-         resultTable.Columns.Add(new DataColumn("Valeur", typeof(int)));
+			var resultTable = CreateResultTable();
 
-         if (modelName == "ConformiteModel")
+         if (modelName == "Conformite")
          {
             resultTable.Rows.Add("Conforme", data.PlayersConformCount);
             resultTable.Rows.Add("Non conforme", data.PlayersNotConformCount);
          }
-         else if (modelName == "ConnexionModel")
+         else if (modelName == "Connexion")
          {
             resultTable.Rows.Add("Connecté", data.PlayersOkCount);
             resultTable.Rows.Add("Injoignable", data.PlayersUnreachableCount);
          }
-         else if (modelName == "MajModel")
+         else if (modelName == "Maj")
          {
-            resultTable.Rows.Add("Conforme", 10);
-            resultTable.Rows.Add("Non conforme", 11);
+            resultTable.Rows.Add("A jour", 10);
+            resultTable.Rows.Add("Non à jour", 11);
          }
 
-         return resultTable;
+			return resultTable;
       }
+
+		public static MetaSource CreateNoSqlSource(Repository repository)
+		{
+			// Create No Sql data source
+			var source = MetaSource.Create(repository);
+			source.Name = "Telelogos Data Source";
+			source.IsNoSQL = true;
+			source.IsDefault = true;
+			foreach (var src in repository.Sources) src.IsDefault = false;
+
+			repository.Sources.Add(source);
+
+			return source;
+		}												
+
+		public static MetaTable CreateMasterTable(MetaSource source, DataTable table)
+		{
+			var master = MetaTable.Create();
+			master.DynamicColumns = true;
+			master.IsEditable = false;
+			master.Alias = MetaData.MasterTableName;
+			master.Source = source;
+
+			foreach (DataColumn column in table.Columns)
+			{
+				var metaColumn = MetaColumn.Create(column.ColumnName);
+				metaColumn.Source = source;
+				metaColumn.DisplayName = Helper.DBNameToDisplayName(column.ColumnName.Trim());
+				metaColumn.Category = "Master";
+				metaColumn.DisplayOrder = master.GetLastDisplayOrder();
+				metaColumn.Type = Helper.NetTypeConverter(column.DataType);
+				metaColumn.SetStandardFormat();
+				master.Columns.Add(metaColumn);
+			}
+
+			source.MetaData.Tables.Add(master);
+
+			return master;
+		}
+
+		public static DataTable CreateResultTable()
+		{
+			var table = new DataTable();
+
+			table.Columns.Add(new DataColumn("Nom", typeof(string)));
+			table.Columns.Add(new DataColumn("Valeur", typeof(int)));
+			return table;
+		}
+
+		public static Report CreateReport(Repository repository)
+		{
+			var report = Report.Create(repository);
+			report.DisplayName = "Dashboard Report";
+			// Vider les models et les vues
+			report.Views.RemoveRange(0, report.Views.Count);
+			report.Models.RemoveRange(0, report.Models.Count);
+
+			return report;
+		}
+
+		public static void AddViews(Report report)
+		{
+			var rootView = report.AddRootView();
+			rootView.SortOrder = report.Views.Count > 0 ? report.Views.Max(i => i.SortOrder) + 1 : 1;
+			rootView.Name = Helper.GetUniqueName("View", (from i in report.Views select i.Name).ToList());
+
+			foreach (var model in report.Models)
+			{
+				var modelView = report.AddChildView(rootView, "TelelogosModel");
+				modelView.Name = model.Name;
+				modelView.ModelGUID = model.GUID;
+
+				modelView.InitParameters(false);
+				modelView.Parameters.FirstOrDefault(p => p.Name == "show_summary_table").BoolValue = false;
+				modelView.Parameters.FirstOrDefault(p => p.Name == "show_page_tables").BoolValue = false;
+				modelView.Parameters.FirstOrDefault(p => p.Name == "show_data_tables").BoolValue = false;
+				modelView.Parameters.FirstOrDefault(p => p.Name == "show_page_separator").BoolValue = false;
+
+				var modelContainerView = report.AddChildView(modelView, ReportViewTemplate.ModelContainerName);
+
+				var dashboardView = report.AddChildView(modelContainerView, "M4D_Dashboard");
+				dashboardView.InitParameters(false);
+				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_doughnut").BoolValue = true;
+				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_show_legend").BoolValue = true;
+				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_legend_position").TextValue = "bottom";
+				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_colors").Value = GetColor(model.Name);
+				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_circumference").Value = "1.25*Math.PI";
+				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_rotation").Value = "0.5*Math.PI";
+			}
+		}
+
+		public static string GetColor(string modelName)
+		{
+			if (modelName == "Conformite")
+			{
+				return "['#10BE5D','#ea6153']";
+			}
+			else if (modelName == "Connexion")
+			{
+				return "['#10BE5D','orange']";
+			}
+			else if (modelName == "Maj")
+			{
+				return "['#10BE5D','#ea6153']";
+			}
+
+			return string.Empty;
+		}
 
       public static void GenerateConformityReport(DashboardStatistics data, ReportFormat format)
       {
-         // Configure Razor Engine
-         RazorHelper.SetDebugMode(true);
-         // Create the repository
-         var repository = Repository.Create();
+			// Create the repository
+			var repository = Repository.Create();
+			// Create the NoSql source
+			var source = CreateNoSqlSource(repository);
+			// Create the result DataTable
+			var resultTable = CreateResultTable();
+			// Create the master table and add it to the data source
+			var master = CreateMasterTable(source, resultTable);
+			// Create the report
+			var report = CreateReport(repository);
+			// Add models
+			AddModel("Conformite", report, master, data);
+			AddModel("Connexion", report, master, data);
+			AddModel("Maj", report, master, data);
+			// Add views
+			AddViews(report);
 
-         // Create No Sql data source
-         var source = MetaSource.Create(repository);
-         source.Name = "Telelogos Data Source";
-         source.IsNoSQL = true;
-         source.IsDefault = true;
-         foreach (var src in repository.Sources) src.IsDefault = false;
+          // Execute the report
+          report.RenderOnly = true;
+          report.Format = format;
+          //report.Views[0].PdfConfigurations.Add(getPdfHeaderConfiguration());
+          var execution = new ReportExecution() { Report = report };
+          execution.Execute();
+          while (report.IsExecuting) System.Threading.Thread.Sleep(100);
+          
+          // Generate the report
+          var outputFile = execution.GeneratePrintResult();
+          //sendEmail(outputFile);
 
-         repository.Sources.Add(source);
-
-         // Create the master table and add it to the data source
-         var master = MetaTable.Create();
-         master.DynamicColumns = true;
-         master.IsEditable = false;
-         master.Alias = MetaData.MasterTableName;
-         master.Source = source;
-         source.MetaData.Tables.Add(master);      
-
-         // Create the report
-         Report report = Report.Create(repository);
-         report.DisplayName = "Dashboard Report";
-
-         report.Models.RemoveAll(m => m != null);
-         report.Views.RemoveAll(v => v.Name != RootViewName);
-
-         // Configure the model's elements
-         var model = report.Models[0];
-         // Add the result table
-         var resultTable = new DataTable();
-
-         resultTable.Columns.Add(new DataColumn("Nom", typeof(string)));
-         resultTable.Columns.Add(new DataColumn("Valeur", typeof(int)));
-
-         model.ResultTable.Rows.Add("Conforme", 10);
-         model.ResultTable.Rows.Add("Non conforme", 11);
-
-         foreach (DataColumn column in model.ResultTable.Columns)
-         {
-            var metaColumn = MetaColumn.Create(column.ColumnName);
-            metaColumn.Source = master.Source;
-            metaColumn.DisplayName = Helper.DBNameToDisplayName(column.ColumnName.Trim());
-            metaColumn.Category = "Master";
-            metaColumn.DisplayOrder = master.GetLastDisplayOrder();
-            metaColumn.Type = Helper.NetTypeConverter(column.DataType);
-            metaColumn.SetStandardFormat();
-            master.Columns.Add(metaColumn);
-         }
-
-         foreach (var column in master.Columns)
-         {
-            var element = ReportElement.Create();
-            element.MetaColumnGUID = column.GUID;
-
-            switch (column.Name)
-            {
-               case "Nom":
-                  {
-                     element.PivotPosition = PivotPosition.Row;
-                     element.SerieDefinition = SerieDefinition.Axis;
-                     element.SerieSortType = SerieSortType.None;
-                     element.SortOrder = SortOrderConverter.kNoSortKeyword;
-                  }
-                  break;
-               case "Valeur":
-                  {
-                     element.PivotPosition = PivotPosition.Data;
-                     element.ChartJSSerie = ChartJSSerieDefinition.Pie;
-                     element.SerieSortType = SerieSortType.None;
-                     element.SortOrder = SortOrderConverter.kNoSortKeyword;
-                  }
-                  break;
-            }
-
-            report.Models[0].Elements.Add(element);
-         }
-
-         source.InitReferences(repository);
-         model.InitReferences();
-
-         
-         // Remove no used views
-         var sqlView = report.Views.FirstOrDefault(v => v.Name == "SQL view");
-         if (sqlView != null)
-            report.Views.Remove(sqlView);
-
-         // Configure the view
-         var view = report.Views.FirstOrDefault(p => p.ViewName == RootViewName);
-         var viewModel = view?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ModelName);
-         var viewModelContainer = viewModel?.Views.FirstOrDefault(p => p.ViewName == ReportViewTemplate.ModelContainerName);
-         viewModelContainer.Views.RemoveAll(v => v.Template.Name != "M4D_Dashboard");
-         report.AddChildView(viewModelContainer, "M4D_Dashboard");
-         var viewChartJS = viewModelContainer?.Views.FirstOrDefault(p => p.ViewName == "M4D_Dashboard");
-         if (viewChartJS != null)
-         {
-            viewChartJS.InitParameters(false);
-            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_doughnut").BoolValue = true;
-            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_show_legend").BoolValue = true;
-            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_legend_position").TextValue = "bottom";
-            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_colors").Value = "['#10BE5D','#ea6153']";
-            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_circumference").Value = "1.25*Math.PI";
-            viewChartJS.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_rotation").Value = "0.5*Math.PI";
-         }
-
-         // Execute the report
-         report.RenderOnly = true;
-         report.Format = format;
-         //report.Views[0].PdfConfigurations.Add(getPdfHeaderConfiguration());
-         var execution = new ReportExecution() { Report = report };
-         execution.Execute();
-         while (report.IsExecuting) System.Threading.Thread.Sleep(100);
-
-         // Paramétrer la vue Model
-         viewModel.Parameters.FirstOrDefault(p => p.Name == "show_summary_table").BoolValue = false;
-         viewModel.Parameters.FirstOrDefault(p => p.Name == "show_page_tables").BoolValue = false;
-         viewModel.Parameters.FirstOrDefault(p => p.Name == "show_data_tables").BoolValue = false;
-         viewModel.Parameters.FirstOrDefault(p => p.Name == "show_page_separator").BoolValue = false;
-         viewModel.Parameters.FirstOrDefault(p => p.Name == "pages_layout").TextValue = "col-sm-4;col-sm-4;col-sm-4";
-         // Generate the report
-         var outputFile = execution.GeneratePrintResult();
-         //sendEmail(outputFile);
-
-         // Show the report
-         Process.Start(outputFile);
+          // Show the report
+          Process.Start(outputFile);
       }
 
       static DashboardStatistics DATA_Statistics = new DashboardStatistics
