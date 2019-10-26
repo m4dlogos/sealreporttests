@@ -40,14 +40,26 @@ Chart.controllers.doughnutWithText = Chart.controllers.doughnut.extend({
 			}
 		});
 
-		ctx.font = '52px arial'; // '48px sherif';
-		ctx.fillStyle = 'black';
+		
+		
+		ctx.fillStyle = '#333333';
 		ctx.textBaseline = 'middle';
+		ctx.textAlign = 'center';
 		var model = this.chart.data.datasets[0]._meta[Object.keys(this.chart.data.datasets[0]._meta)[0]].data[0]._model;
-		var total = this.chart.data.datasets[0].data[0] + this.chart.data.datasets[0].data[1];
-		var conforme = this.chart.data.datasets[0].data[0];
-		var percent = Number(conforme/total).toLocaleString(undefined,{style: 'percent', minimumFractionDigits:0});
-		ctx.fillText(percent +" " + this.chart.data.labels[0], this.chart.width/2 + (model.outerRadius - model.innerRadius), this.chart.height/2 + model.innerRadius/3 , 2*model.innerRadius);
+		var total = this.chart.data.datasets[0]._meta[Object.keys(this.chart.data.datasets[0]._meta)[0]].total;
+		var firstValue = this.chart.data.datasets[0].data[0];
+		var percent = Number(firstValue/total).toLocaleString(undefined,{style: 'percent', minimumFractionDigits:0});
+		
+		let fontSize = Math.floor(model.innerRadius * 0.7);
+		ctx.font = fontSize + 'px arial';
+		let textHeight = parseInt(ctx.font);
+		var maxWidth = (2*model.innerRadius)*0.7;
+		
+		ctx.fillText(percent, model.x, model.y, maxWidth);
+		
+		fontSize = fontSize*0.6;
+		ctx.font = fontSize + 'px ariral';
+		ctx.fillText(this.chart.data.labels[0], model.x, model.y + textHeight*0.7, maxWidth);
 
 		ctx.restore();
 	},

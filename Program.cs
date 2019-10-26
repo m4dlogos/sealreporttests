@@ -165,7 +165,7 @@ namespace TelelogosGenerationReport
 			return resultTable;
       }
 
-		public static MetaSource CreateNoSqlSource(Repository repository)
+		public static MetaSource CreateSource(Repository repository)
 		{
 			// Create No Sql data source
 			var source = MetaSource.Create(repository);
@@ -230,21 +230,19 @@ namespace TelelogosGenerationReport
 			rootView.SortOrder = report.Views.Count > 0 ? report.Views.Max(i => i.SortOrder) + 1 : 1;
 			rootView.Name = Helper.GetUniqueName("View", (from i in report.Views select i.Name).ToList());
 
+			var containerView = report.AddChildView(rootView, "Container");
+			containerView.InitParameters(false);
+			containerView.Parameters.FirstOrDefault(p => p.Name == "grid_layout").Value = "col-sm-4;col-sm-4;col-sm-4";
+
 			foreach (var model in report.Models)
 			{
-				var modelView = report.AddChildView(rootView, "TelelogosModel");
+				var modelView = report.AddChildView(containerView, ReportViewTemplate.ModelName);
+				modelView.Views.RemoveRange(0, modelView.Views.Count); // Supprimer les vues par défaut ajoutées lorsque c'est le template Model
 				modelView.Name = model.Name;
 				modelView.ModelGUID = model.GUID;
 
-				modelView.InitParameters(false);
-				modelView.Parameters.FirstOrDefault(p => p.Name == "show_summary_table").BoolValue = false;
-				modelView.Parameters.FirstOrDefault(p => p.Name == "show_page_tables").BoolValue = false;
-				modelView.Parameters.FirstOrDefault(p => p.Name == "show_data_tables").BoolValue = false;
-				modelView.Parameters.FirstOrDefault(p => p.Name == "show_page_separator").BoolValue = false;
+				var dashboardView = report.AddChildView(modelView, "M4D_Dashboard");
 
-				var modelContainerView = report.AddChildView(modelView, ReportViewTemplate.ModelContainerName);
-
-				var dashboardView = report.AddChildView(modelContainerView, "M4D_Dashboard");
 				dashboardView.InitParameters(false);
 				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_doughnut").BoolValue = true;
 				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_show_legend").BoolValue = true;
@@ -278,7 +276,7 @@ namespace TelelogosGenerationReport
 			// Create the repository
 			var repository = Repository.Create();
 			// Create the NoSql source
-			var source = CreateNoSqlSource(repository);
+			var source = CreateSource(repository);
 			// Create the result DataTable
 			var resultTable = CreateResultTable();
 			// Create the master table and add it to the data source
