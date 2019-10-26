@@ -75,6 +75,8 @@
                         @view.GetValue("chartjs_padding")
                     }
                 },
+				circumference: @Raw(view.GetParameter("chartjs_options_circumference").Value),
+				rotation: @Raw(view.GetParameter("chartjs_options_rotation").Value),
                 tooltips: {
                     callbacks: {
                         label: function (tooltipItem, data) {
@@ -183,6 +185,11 @@
                 }
             };
 
+				@if (view.GetBoolValue("chartjs_doughnut_with_text"))
+				{
+					chartType = "doughnutWithText";
+				}
+				
                 var @chartId = new Chart(ctx, {
                     type: '@chartType',
                     data: data,

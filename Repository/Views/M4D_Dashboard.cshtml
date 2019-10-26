@@ -18,7 +18,6 @@
     if (modelView.InitPageChart(page))
     {
         string chartType = reportModel.ExecChartJSType;
-		bool doughnutWithText = false;
         if (chartType == "pie" && view.GetBoolValue("chartjs_doughnut"))
         {
             chartType = "doughnut";

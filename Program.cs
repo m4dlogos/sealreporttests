@@ -241,15 +241,15 @@ namespace TelelogosGenerationReport
 				modelView.Name = model.Name;
 				modelView.ModelGUID = model.GUID;
 
-				var dashboardView = report.AddChildView(modelView, "M4D_Dashboard");
+				var chartJSView = report.AddChildView(modelView, ReportViewTemplate.ChartJSName);
 
-				dashboardView.InitParameters(false);
-				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_doughnut").BoolValue = true;
-				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_show_legend").BoolValue = true;
-				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_legend_position").TextValue = "bottom";
-				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_colors").Value = GetColor(model.Name);
-				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_circumference").Value = "1.25*Math.PI";
-				dashboardView.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_rotation").Value = "0.5*Math.PI";
+				chartJSView.InitParameters(false);
+				chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_doughnut").BoolValue = true;
+				chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_show_legend").BoolValue = true;
+				chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_legend_position").TextValue = "bottom";
+				chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_colors").Value = GetColor(model.Name);
+				chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_circumference").Value = "1.25*Math.PI";
+				chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_rotation").Value = "0.5*Math.PI";
 			}
 		}
 
