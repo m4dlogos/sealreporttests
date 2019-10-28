@@ -2,7 +2,6 @@
 using Seal.Helpers;
 using Seal.Model;
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Diagnostics;
 using System.IO;
@@ -16,6 +15,13 @@ namespace TelelogosGenerationReport
       static void Main(string[] args)
       {
          GenerateConformityReport(DATA_Statistics, ReportFormat.html);
+         //var reportBuilder = new DashboardReportBuilder();
+         //var reportBuilderManager = new DashboardReportBuilderManager();
+         //reportBuilderManager.BuildReport(reportBuilder, DATA_Statistics);
+         //var reportFile = reportBuilder.GenerateReport();
+
+         //// Show the report
+         //Process.Start(reportFile);
       }
 
       #region Samples

@@ -1,0 +1,81 @@
+﻿<div ng-init="dashboardStatisticsCtrl.onInit()" class="row home-dashboard-statistics">
+
+   <div ng-if="dashboardStatisticsCtrl.ready">
+      <div class="home-dashboard-statistic">
+         <table>
+            <tr>
+               <td colspan="2">
+                  <percentage-view percentage-view-values="dashboardStatisticsCtrl.playersConformityValues" canvas-width="120" display-percentage="dashboardStatisticsCtrl.trueValue" label="dashboardStatisticsCtrl.$translate.instant('PLAYERS_DASHBOARD_CONFORMITY_OK')"></percentage-view>
+               </td>
+            </tr>
+            <tr ng-click="dashboardStatisticsCtrl.onViewPlayersConform()" style="cursor:pointer">
+               <td>{{"PLAYERS_DASHBOARD_CONFORMITY_OK"|translate}}</td>
+               <td class="players-conformity-ok"><div>{{dashboardStatisticsCtrl.dashboardStatistics.playersConformCount}}</div></td>
+            </tr>
+            <tr ng-click="dashboardStatisticsCtrl.onViewPlayersNotConform()" style="cursor:pointer">
+               <td>{{"PLAYERS_DASHBOARD_CONFORMITY_NOK"|translate}}</td>
+               <td class="players-conformity-non-ok"><div>{{dashboardStatisticsCtrl.dashboardStatistics.playersNotConformCount}}</div></td>
+            </tr>
+         </table>
+      </div>
+
+      <div class="home-dashboard-statistic">
+         <table>
+            <tr>
+               <td colspan="2"><percentage-view percentage-view-values="dashboardStatisticsCtrl.playersStatusValues" canvas-width="120" label="dashboardStatisticsCtrl.$translate.instant('PLAYERS_IS_OK')"></percentage-view></td>
+            </tr>
+            <tr ng-click="dashboardStatisticsCtrl.onViewPlayersOk()" style="cursor:pointer" class="players-ok">
+               <td>{{"PLAYERS_IS_OK"|translate}}</td>
+               <td><div>{{dashboardStatisticsCtrl.dashboardStatistics.playersOkCount}}</div></td>
+            </tr>
+            <tr ng-click="dashboardStatisticsCtrl.onViewPlayersUnreachable()" style="cursor:pointer">
+               <td>{{"PLAYERS_UNREACHABLE"|translate}}</td>
+               <td class="players-unreachable"><div>{{dashboardStatisticsCtrl.dashboardStatistics.playersUnreachableCount}}</div></td>
+            </tr>
+         </table>
+      </div>
+      <div class="home-dashboard-statistic">
+         <table>
+            <tr>
+               <td colspan="2">
+                  <percentage-view percentage-view-values="dashboardStatisticsCtrl.playersUpToDateValues" canvas-width="120" label="dashboardStatisticsCtrl.$translate.instant('PLAYERS_UP_TO_DATE')"></percentage-view>
+               </td>
+            </tr>
+            <tr ng-click="dashboardStatisticsCtrl.onViewPlayersUpToDate()" style="cursor:pointer">
+               <td>{{"PLAYERS_UP_TO_DATE"|translate}}</td>
+               <td class="players-up-to-date"><div>{{dashboardStatisticsCtrl.dashboardStatistics.playersUpToDateCount}}</div></td>
+            </tr>
+            <tr ng-click="dashboardStatisticsCtrl.onViewPlayersNotUpToDate()" style="cursor:pointer">
+               <td>{{"PLAYERS_NOT_UP_TO_DATE"|translate}}</td>
+               <td class="players-not-up-to-date"><div>{{dashboardStatisticsCtrl.dashboardStatistics.playersNotUpToDateCount}}</div></td>
+            </tr>
+         </table>
+      </div>
+      <!-- MB V.4.4.0 - 05/01/2018 - #7692 - Tableau de bord - Indicateur alarmes : masquer l'indicateur, mais garder le code au cas où
+         <div class="home-dashboard-statistic">
+         <table>
+            <tr>
+               <td colspan="2">
+                  <percentage-view percentage-view-values="dashboardStatisticsCtrl.alarmsValue" canvas-width="120" display-percentage="dashboardStatisticsCtrl.trueValue" label="dashboardStatisticsCtrl.$translate.instant('PLAYERS_WITHOUT_ALARM')"></percentage-view>
+               </td>
+            </tr>
+            <tr>
+               <td>"PLAYERS_WITHOUT_ALARM"|translate}}</td>
+               <td class="players-without-alarm"><div>dashboardStatisticsCtrl.dashboardStatistics.playersWithoutAlarmCount}}</div></td>
+            </tr>
+            <tr ng-click="dashboardStatisticsCtrl.onOpenAlarms()" style="cursor:pointer">
+               <td>"PLAYERS_WITH_ALARM"|translate}}</td>
+               <td class="players-with-alarm"><div>dashboardStatisticsCtrl.dashboardStatistics.playersWithAlarmCount}}</div></td>
+            </tr>
+         </table>
+      </div>-->
+      <div class="home-dashboard-statistics-players-licences" ng-if="!dashboardStatisticsCtrl.isPlayerManager">
+          <div><em>{{"PLAYERS_LICENCES"|translate}}</em></div>
+          <div class="size-container">{{dashboardStatisticsCtrl.licenseCountText}}</div>
+          <div><em>{{"PLAYERS_LICENCES_PLAYERS"|translate}}</em></div>
+          <div ng-if="dashboardStatisticsCtrl.licenseDateIsValid"><em>{{"HOME_COMPANY_EXPIRATION_DATE"|translate}}</em></div>
+          <div ng-if="dashboardStatisticsCtrl.licenseDateIsValid" class="size-container">{{dashboardStatisticsCtrl.expirationDateLicence}}</div>
+      </div>
+      </div>
+   </div>
+</div>

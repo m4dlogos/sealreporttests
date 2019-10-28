@@ -1,0 +1,87 @@
+<!-- TODO : revoir les noms des styles -->
+<mat-toolbar [class.mat-elevation-z2]="true" [class.menu-mat-toolbar]="true">
+   <span>{{'DASHBOARD.TITLE'|translate}}</span>
+   <span style="flex:1 1 auto"></span>
+   <span style="font-size:11px">{{'DASHBOARD.M4D_VERSION'|translate}} {{m4dVersion}}</span>
+</mat-toolbar>
+
+  <div *ngIf="dashboardStatistics !== null" class="main-container">
+    <div class="dashboard-statistic">
+      <table>
+        <tr>
+          <td colspan="2">
+            <app-percentage-view [percentageViewValues]="playersConformityValues"
+                                 [canvasWidth]="120"
+                                 [displayPercentage]="true"
+                                 [label]="'DASHBOARD.PLAYERS_DASHBOARD_CONFORMITY_OK'|translate">
+            </app-percentage-view>
+          </td>
+        </tr>
+        <tr class="players-conformity-ok">
+          <td>{{'DASHBOARD.PLAYERS_DASHBOARD_CONFORMITY_OK'|translate}}</td>
+          <td>
+            <div>{{dashboardStatistics.playersConformCount}}</div>
+          </td>
+        </tr>
+        <tr class="players-conformity-non-ok">
+          <td>{{'DASHBOARD.PLAYERS_DASHBOARD_CONFORMITY_NOK'|translate}}</td>
+          <td>
+            <div>{{dashboardStatistics.playersNotConformCount}}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="dashboard-statistic">
+      <table>
+        <tr>
+          <td colspan="2">
+            <app-percentage-view [percentageViewValues]="playersStatusValues"
+                                 [canvasWidth]="120"
+                                 [label]="'DASHBOARD.PLAYERS_IS_OK'|translate"></app-percentage-view>
+          </td>
+        </tr>
+        <tr class="players-ok">
+          <td>{{"DASHBOARD.PLAYERS_IS_OK"|translate}}</td>
+          <td><div>{{dashboardStatistics.playersOkCount}}</div></td>
+        </tr>
+        <tr class="players-unreachable">
+          <td>{{"DASHBOARD.PLAYERS_UNREACHABLE"|translate}}</td>
+          <td><div>{{dashboardStatistics.playersUnreachableCount}}</div></td>
+        </tr>
+      </table>
+    </div>
+
+    <div class="dashboard-statistic">
+      <table>
+        <tr>
+          <td colspan="2">
+            <app-percentage-view [percentageViewValues]="playersUpToDateValues"
+                                 [canvasWidth]="120"
+                                 [label]="'DASHBOARD.PLAYERS_UP_TO_DATE'|translate"></app-percentage-view>
+          </td>
+        </tr>
+        <tr class="players-up-to-date">
+          <td>{{"DASHBOARD.PLAYERS_UP_TO_DATE"|translate}}</td>
+          <td><div>{{dashboardStatistics.playersUpToDateCount}}</div></td>
+        </tr>
+        <tr class="players-not-up-to-date">
+          <td>{{"DASHBOARD.PLAYERS_NOT_UP_TO_DATE"|translate}}</td>
+          <td><div>{{dashboardStatistics.playersNotUpToDateCount}}</div></td>
+        </tr>
+      </table>
+    </div>
+
+  <div class="dashboard-additional-infos-container">
+    <div class="dashboard-additional-infos">
+      <div><em>{{"DASHBOARD.PLAYERS_LICENCES"|translate}}</em></div>
+      <div class="size-container">{{licensesCount}}</div>
+    </div>
+
+      <div class="dashboard-additional-infos">
+        <div><em>{{"DASHBOARD.LIBRARY_SIZE"|translate}}</em></div>
+        <div class="size-container">{{librarySizeLabel}}</div>
+      </div>
+    </div>
+  </div>
+
