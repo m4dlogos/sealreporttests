@@ -10,62 +10,37 @@ namespace TelelogosGenerationReport
    // Class that handles the dashreport report builder
    public class DashboardReportBuilderManager
    {
-      private DataTable _resultTable;
-
       // Constructor
       public DashboardReportBuilderManager()
       {
-         BuildResultTable();
       }
 
       // Build the result table
-      private void BuildResultTable()
+      private DataTable BuildResultTable(DashboardStatistics statistics)
       {
-         _resultTable = new DataTable();
-         _resultTable.Columns.Add(new DataColumn("Indicateur", typeof(string)));
-         _resultTable.Columns.Add(new DataColumn("Valeur", typeof(int)));
-      }
+         var resultTable = new DataTable();
+			resultTable.Columns.Add(new DataColumn("Indicateur", typeof(string)));
+			resultTable.Columns.Add(new DataColumn("Valeur", typeof(int)));
+			resultTable.Rows.Add("Conforme", statistics.PlayersConformCount);
+			resultTable.Rows.Add("Non conforme", statistics.PlayersNotConformCount);
+			resultTable.Rows.Add("Connecté", statistics.PlayersOkCount);
+			resultTable.Rows.Add("Injoignable", statistics.PlayersUnreachableCount);
+			resultTable.Rows.Add("A jour", statistics.PlayersUpToDateCount);
+			resultTable.Rows.Add("Non à jour", statistics.PlayersNotUpToDateCount);
 
-      // Add the conformity model
-      private void AddConformiteModel(DashboardReportBuilder builder, DashboardStatistics statistics)
-      {
-         var table = _resultTable.Clone();
-         table.Rows.Add("Conforme", statistics.PlayersConformCount);
-         table.Rows.Add("Non conforme", statistics.PlayersNotConformCount);
-
-         builder.AddModel("Conformite", table);
-      }
-
-      // Add the model for devices connections
-      private void AddConnexionModel(DashboardReportBuilder builder, DashboardStatistics statistics)
-      {
-         var table = _resultTable.Clone();
-         table.Rows.Add("Connecté", statistics.PlayersOkCount);
-         table.Rows.Add("Injoignable", statistics.PlayersUnreachableCount);
-
-         builder.AddModel("Connexion", table);
-      }
-
-      // Add the model for devices up to date 
-      private void AddMajModel(DashboardReportBuilder builder, DashboardStatistics statistics)
-      {
-         var table = _resultTable.Clone();
-         table.Rows.Add("A jour", statistics.PlayersUpToDateCount);
-         table.Rows.Add("Non à jour", statistics.PlayersNotUpToDateCount);
-
-         builder.AddModel("Maj", table);
-      }
+			return resultTable;
+		}
 
       // Build the report
       public void BuildReport(DashboardReportBuilder builder, DashboardStatistics statistics)
       {
-         builder.SetReporDisplaytName("Dashboard Report");
-         // Add models
-         AddConformiteModel(builder, statistics);
-         AddConnexionModel(builder, statistics);
-         AddMajModel(builder, statistics);
-         // Add views
+			var table = BuildResultTable(statistics);
+			builder.CreateRepository();
+			builder.AddSource(table);
+			builder.CreateReport();
+			builder.AddModels();
          builder.AddViews();
+			builder.FillResultTable();
       }
    }
 }

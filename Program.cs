@@ -14,15 +14,15 @@ namespace TelelogosGenerationReport
    {
       static void Main(string[] args)
       {
-         GenerateConformityReport(DATA_Statistics, ReportFormat.html);
-         //var reportBuilder = new DashboardReportBuilder();
-         //var reportBuilderManager = new DashboardReportBuilderManager();
-         //reportBuilderManager.BuildReport(reportBuilder, DATA_Statistics);
-         //var reportFile = reportBuilder.GenerateReport();
+			//GenerateConformityReport(DATA_Statistics, ReportFormat.html);
+			var reportBuilder = new DashboardReportBuilder();
+			var reportBuilderManager = new DashboardReportBuilderManager();
+			reportBuilderManager.BuildReport(reportBuilder, DATA_Statistics);
+			var reportFile = reportBuilder.GenerateReport();
 
-         //// Show the report
-         //Process.Start(reportFile);
-      }
+			// Show the report
+			Process.Start(reportFile);
+		}
 
       #region Samples
       public static void SimpleExecution()

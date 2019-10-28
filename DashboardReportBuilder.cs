@@ -13,11 +13,9 @@ namespace TelelogosGenerationReport
    // Class that implements the dashboard report generation
    public class DashboardReportBuilder
    {
-      public const string RootViewName = "View";
-
       protected Repository _repository;
-      protected MetaSource _source;
       protected Report _report;
+		protected DataTable _resultTable;
 
       public const string GREEN = "#10BE5D";
       public const string RED = "#EA6153";
@@ -25,107 +23,176 @@ namespace TelelogosGenerationReport
 
       protected Dictionary<string, string> _colors;
 
-      // Create the repository with no sources
-      protected virtual void CreateRepository()
+		// Default constructor
+		public DashboardReportBuilder()
+		{
+			CreateRepository();
+			_colors = new Dictionary<string, string> { { "Conformite", $"['{GREEN}', '{RED}']" }, { "Connexion", $"['{GREEN}','{ORANGE}']" }, { "Maj", $"['{GREEN}','{RED}']" } };
+		}
+
+		// Create the repository with no sources
+		public void CreateRepository()
       {
          _repository = Repository.Create();
          _repository.Sources.Clear();
       }
 
-      // Create a default source
-      protected virtual void CreateSource()
+      // Add the source to the repository as the default source
+      public void AddSource(DataTable table)
       {
-         if (_repository == null)
-            CreateRepository();
+			if (_repository == null)
+				CreateRepository();
 
-         _source = MetaSource.Create(_repository);
-         _source.Name = "Telelogos Data Source";
-         _source.IsNoSQL = true;
-         _source.IsDefault = true;
-         _repository.Sources.All(s => s.IsDefault = false);
-         _repository.Sources.Add(_source);
+			_resultTable = table;
+
+			var source = MetaSource.Create(_repository);
+			source.Name = "Telelogos Data Source";
+			source.IsNoSQL = true;
+			source.IsDefault = true;
+
+			AddMasterTable(source, table);
+
+			_repository.Sources.Add(source);
       }
 
-      // Create an empty report
-      protected virtual void CreateReport()
+      // Create the report
+      public void CreateReport()
       {
-         if (_repository == null)
-            CreateRepository();
+			if (_repository == null)
+				CreateRepository();
 
          _report = Report.Create(_repository);
-         _report.DisplayName = "Telelogos Report";
+         _report.DisplayName = "Dashboard Report";
          // Clear default objects created by SealReport
          _report.Views.Clear();
          _report.Models.Clear();
       }
 
-      // Default constructor
-      public DashboardReportBuilder()
+      // Add the master table to the source from the input table
+      protected void AddMasterTable(MetaSource source, DataTable table)
       {
-         CreateRepository();
-         CreateSource();
-         CreateReport();
-         _colors = new Dictionary<string, string> { { "Conformite", $"['{GREEN}', '{RED}']" }, { "Connexion", $"['{GREEN}','{ORANGE}']" }, { "Maj", $"['{GREEN}','{RED}']" } };
-      }
+			// Remove the master tables
+			source.MetaData.Tables.RemoveAll(t => t.Alias == MetaData.MasterTableName);
 
-      // Set the display name of the report
-      public void SetReporDisplaytName(string name)
+			var master = MetaTable.Create();
+			master.DynamicColumns = true;
+			master.IsEditable = false;
+			master.Alias = MetaData.MasterTableName;
+			master.Source = source;
+
+			foreach (DataColumn column in table.Columns)
+			{
+				var metaColumn = MetaColumn.Create(column.ColumnName);
+				metaColumn.Source = source;
+				metaColumn.DisplayName = Helper.DBNameToDisplayName(column.ColumnName.Trim());
+				metaColumn.Category = "Master";
+				metaColumn.DisplayOrder = master.GetLastDisplayOrder();
+				metaColumn.Type = Helper.NetTypeConverter(column.DataType);
+				metaColumn.SetStandardFormat();
+
+				master.Columns.Add(metaColumn);
+			}
+
+			source.MetaData.Tables.Add(master);
+		}
+
+		// Get the master table
+		protected MetaTable MasterTable
+		{
+			get
+			{
+				var src = _repository.Sources.FirstOrDefault(s => s.MetaData.MasterTable != null);
+				if (src != null)
+					return src.MetaData.MasterTable;
+
+				return null;
+			}
+		}
+
+		// Add the models
+		public void AddModels()
+		{
+			AddModel("Conformite");
+			AddModel("Connexion");
+			AddModel("Maj");
+		}
+
+		// Fill the result table
+		public void FillResultTable()
+		{
+			FillResultConformite(_resultTable);
+			FillResultConnexion(_resultTable);
+			FillResultMaj(_resultTable);
+		}
+
+		// Fill the result table of the conformity model
+		protected void FillResultConformite(DataTable table)
+		{
+			if (_report == null)
+				CreateReport();
+
+			var model = _report.Models.FirstOrDefault(m => m.Name == "Conformite");
+			if (model != null)
+			{
+				var resultTable = table.Clone();
+				foreach (var row in table.Select("Indicateur in ('Conforme', 'Non conforme')"))
+				{
+					resultTable.ImportRow(row);
+				}
+
+				model.ResultTable = resultTable;
+			}
+		}
+
+		// Fill the result table of the connection model
+		protected void FillResultConnexion(DataTable table)
+		{
+			if (_report == null)
+				CreateReport();
+
+			var model = _report.Models.FirstOrDefault(m => m.Name == "Connexion");
+			if (model != null)
+			{
+				var resultTable = table.Clone();
+				foreach (var row in table.Select("Indicateur in ('Connecté', 'Injoignable')"))
+				{
+					resultTable.ImportRow(row);
+				}
+
+				model.ResultTable = resultTable;
+			}
+		}
+
+		// Fill the result table of the up to date model
+		protected void FillResultMaj(DataTable table)
+		{
+			if (_report == null)
+				CreateReport();
+
+			var model = _report.Models.FirstOrDefault(m => m.Name == "Maj");
+			if (model != null)
+			{
+				var resultTable = table.Clone();
+				foreach (var row in table.Select("Indicateur in ('A jour', 'Non à jour')"))
+				{
+					resultTable.ImportRow(row);
+				}
+
+				model.ResultTable = resultTable;
+			}
+		}
+
+		// Add a model to the report
+		protected void AddModel(string modelName)
       {
          if (_report == null)
             CreateReport();
-
-         _report.DisplayName = name;
-      }
-
-      // Create the master table from the DataTable which is the definition of the result table and which is used to configure the reporting model
-      protected void CreateMasterTable(DataTable table)
-      {
-         if (_source == null)
-            CreateSource();
-
-         // Remove the master table
-         _source.MetaData.Tables.RemoveAll(t => t.Alias == MetaData.MasterTableName);
-
-         var master = MetaTable.Create();
-         master.DynamicColumns = true;
-         master.IsEditable = false;
-         master.Alias = MetaData.MasterTableName;
-         master.Source = _source;
-
-         foreach (DataColumn column in table.Columns)
-         {
-            var metaColumn = MetaColumn.Create(column.ColumnName);
-            metaColumn.Source = _source;
-            metaColumn.DisplayName = Helper.DBNameToDisplayName(column.ColumnName.Trim());
-            metaColumn.Category = "Master";
-            metaColumn.DisplayOrder = master.GetLastDisplayOrder();
-            metaColumn.Type = Helper.NetTypeConverter(column.DataType);
-            metaColumn.SetStandardFormat();
-            master.Columns.Add(metaColumn);
-         }
-
-         _source.MetaData.Tables.Add(master);
-      }
-
-      // Indicates whether the source has a master table or not
-      public bool HasMasterTable { get => _source != null && _source.MetaData.Tables.FirstOrDefault(t => t.Alias == MetaData.MasterTableName) != null; }
-
-      // Add a model to the report
-      public virtual void AddModel(string modelName, DataTable resultTable)
-      {
-         if (_source == null)
-            CreateSource();
-         if (_report == null)
-            CreateReport();
-         if (!this.HasMasterTable)
-            CreateMasterTable(resultTable);
 
          var model = _report.AddModel(false);
          model.Name = modelName;
-         model.ResultTable = resultTable;
 
-         var master = _source.MetaData.Tables.FirstOrDefault(t => t.Alias == MetaData.MasterTableName);
-         var column = master.Columns.FirstOrDefault(c => c.Name == "Indicateur");
+			var master = this.MasterTable;
+			var column = master.Columns.FirstOrDefault(c => c.Name == "Indicateur");
          if (column != null)
          {
             var element = ReportElement.Create();
@@ -155,8 +222,9 @@ namespace TelelogosGenerationReport
       // Add the views
       public virtual void AddViews()
       {
-         if (_report == null)
-            CreateReport();
+			if (_report == null)
+				return;
+
          // Sanity clear
          _report.Views.Clear();
 
