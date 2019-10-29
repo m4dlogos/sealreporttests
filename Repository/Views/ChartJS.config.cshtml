@@ -32,8 +32,8 @@
     Template.Parameters.Add(new Parameter() { Name = "chartjs_padding", DisplayName = "Padding", Description = "Padding applied in pixels to all sides of the chart (left, top, right, bottom).", Value = "left:0, right:0, top:0, bottom:0" });
     Template.Parameters.Add(new Parameter() { Name = "chartjs_unit", DisplayName = "Time Unit", Description = "Unit applied for chart having a Date Time axis.", Value = "", Enums = new string[] { "|default", "second", "minute", "hour", "day", "week", "month", "quarter", "year" }, UseOnlyEnumValues = true });
     Template.Parameters.Add(new Parameter() { Name = "chartjs_step_size", DisplayName = "Time Step Size", Description = "The number of units between grid lines for chart having a Date Time axis.", NumericValue = 1});
-	Template.Parameters.Add(new Parameter() { Name = "chartjs_options_circumference", DisplayName = "Circumference", Description = "Sweep to allow arcs to cover.", Value = "2*Math.PI"});
-	Template.Parameters.Add(new Parameter() { Name = "chartjs_options_rotation", DisplayName = "Rotation", Description = "Starting angle to draw arcs from.", Value = "-0.5*Math.PI"});
+	Template.Parameters.Add(new Parameter() { Name = "chartjs_options_circumference", DisplayName = "Circumference", Description = "Sweep to allow arcs to cover.", NumericValue = 360});
+	Template.Parameters.Add(new Parameter() { Name = "chartjs_options_rotation", DisplayName = "Rotation", Description = "Starting angle to draw arcs from.", NumericValue = -90});
 	Template.Parameters.Add(new Parameter() { Name = "chartjs_doughnut_with_text", DisplayName = "Pie: Is doughnut with text", BoolValue = true, Description = "If true, the chart is a doughnut (only for Pie chart) with text." });
 
     //Allowed template parent names

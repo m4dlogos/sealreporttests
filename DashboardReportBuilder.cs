@@ -15,19 +15,42 @@ namespace TelelogosGenerationReport
    {
       protected Repository _repository;
       protected Report _report;
-		protected DataTable _resultTable;
 
       public const string GREEN = "#10BE5D";
       public const string RED = "#EA6153";
       public const string ORANGE = "#FD990B";
+      public const string COLUMN_STATISTIC = "Statistic";
+      public const string COLUMN_VALUE = "Value";
+      public const string MODEL_CONFORMITY = "Conformity Model";
+      public const string MODEL_CONNECTION = "Connection Model";
+      public const string MODEL_UPDATE = "Update Model";
+      public const string STAT_CONFORM = "Conforme";
+      public const string STAT_NOT_CONFORM = "Non conforme";
+      public const string STAT_OK = "Connecté";
+      public const string STAT_UNREACHABLE = "Injoignable";
+      public const string STAT_UP_TO_DATE = "A jour";
+      public const string STAT_NOT_UP_TO_DATE = "Non à jour";
 
-      protected Dictionary<string, string> _colors;
+      // The colors by model
+      public static Dictionary<string, string> Colors = new Dictionary<string, string>
+      {
+         { MODEL_CONFORMITY, $"['{GREEN}', '{RED}']" },
+         { MODEL_CONNECTION, $"['{GREEN}','{ORANGE}']" },
+         { MODEL_UPDATE, $"['{GREEN}','{RED}']" }
+      };
 
-		// Default constructor
-		public DashboardReportBuilder()
+      // The statistics by model
+      public static Dictionary<string, List<string>> Statistics = new Dictionary<string, List<string>>
+      {
+         { MODEL_CONFORMITY, new List<string> { STAT_CONFORM, STAT_NOT_CONFORM } },
+         { MODEL_CONNECTION, new List<string> { STAT_OK, STAT_UNREACHABLE } },
+         { MODEL_UPDATE, new List<string> { STAT_UP_TO_DATE, STAT_NOT_UP_TO_DATE } }
+      };
+
+      // Default constructor
+      public DashboardReportBuilder()
 		{
 			CreateRepository();
-			_colors = new Dictionary<string, string> { { "Conformite", $"['{GREEN}', '{RED}']" }, { "Connexion", $"['{GREEN}','{ORANGE}']" }, { "Maj", $"['{GREEN}','{RED}']" } };
 		}
 
 		// Create the repository with no sources
@@ -37,13 +60,27 @@ namespace TelelogosGenerationReport
          _repository.Sources.Clear();
       }
 
+      // Build and returns the result table
+      public DataTable BuildResultTable(DashboardStatistics statistics)
+      {
+         var resultTable = new DataTable();
+         resultTable.Columns.Add(new DataColumn(COLUMN_STATISTIC, typeof(string)));
+         resultTable.Columns.Add(new DataColumn(COLUMN_VALUE, typeof(int)));
+         resultTable.Rows.Add(STAT_CONFORM, statistics.PlayersConformCount);
+         resultTable.Rows.Add(STAT_NOT_CONFORM, statistics.PlayersNotConformCount);
+         resultTable.Rows.Add(STAT_OK, statistics.PlayersOkCount);
+         resultTable.Rows.Add(STAT_UNREACHABLE, statistics.PlayersUnreachableCount);
+         resultTable.Rows.Add(STAT_UP_TO_DATE, statistics.PlayersUpToDateCount);
+         resultTable.Rows.Add(STAT_NOT_UP_TO_DATE, statistics.PlayersNotUpToDateCount);
+
+         return resultTable;
+      }
+
       // Add the source to the repository as the default source
       public void AddSource(DataTable table)
       {
 			if (_repository == null)
 				CreateRepository();
-
-			_resultTable = table;
 
 			var source = MetaSource.Create(_repository);
 			source.Name = "Telelogos Data Source";
@@ -52,6 +89,7 @@ namespace TelelogosGenerationReport
 
 			AddMasterTable(source, table);
 
+         _repository.Sources.All(s => s.IsDefault = false);
 			_repository.Sources.Add(source);
       }
 
@@ -112,30 +150,32 @@ namespace TelelogosGenerationReport
 		// Add the models
 		public void AddModels()
 		{
-			AddModel("Conformite");
-			AddModel("Connexion");
-			AddModel("Maj");
+			AddModel(MODEL_CONFORMITY);
+			AddModel(MODEL_CONNECTION);
+			AddModel(MODEL_UPDATE);
 		}
 
 		// Fill the result table
-		public void FillResultTable()
+		public void FillResultTable(DataTable table)
 		{
-			FillResultConformite(_resultTable);
-			FillResultConnexion(_resultTable);
-			FillResultMaj(_resultTable);
+			FillResult(MODEL_CONFORMITY, table);
+         FillResult(MODEL_CONNECTION, table);
+         FillResult(MODEL_UPDATE, table);
 		}
 
-		// Fill the result table of the conformity model
-		protected void FillResultConformite(DataTable table)
+		// Fill the result table for the model
+		protected void FillResult(string modelName, DataTable table)
 		{
 			if (_report == null)
 				CreateReport();
 
-			var model = _report.Models.FirstOrDefault(m => m.Name == "Conformite");
+			var model = _report.Models.FirstOrDefault(m => m.Name == modelName);
 			if (model != null)
 			{
+            var filter = GeModeltFilter(modelName);
 				var resultTable = table.Clone();
-				foreach (var row in table.Select("Indicateur in ('Conforme', 'Non conforme')"))
+
+				foreach (var row in table.Select(filter))
 				{
 					resultTable.ImportRow(row);
 				}
@@ -144,43 +184,22 @@ namespace TelelogosGenerationReport
 			}
 		}
 
-		// Fill the result table of the connection model
-		protected void FillResultConnexion(DataTable table)
-		{
-			if (_report == null)
-				CreateReport();
+      // Returns the select statistics filter for the model
+      protected string GeModeltFilter(string modelName)
+      {
+         var filter = COLUMN_STATISTIC + " in (";
+         var stats = Statistics[modelName];
+         for (int i = 0; i < stats.Count(); ++i)
+         {
+            filter += "'" + stats[i] + "'";
+            if (i < stats.Count())
+               filter += ",";
+         }
 
-			var model = _report.Models.FirstOrDefault(m => m.Name == "Connexion");
-			if (model != null)
-			{
-				var resultTable = table.Clone();
-				foreach (var row in table.Select("Indicateur in ('Connecté', 'Injoignable')"))
-				{
-					resultTable.ImportRow(row);
-				}
+         filter += ")";
 
-				model.ResultTable = resultTable;
-			}
-		}
-
-		// Fill the result table of the up to date model
-		protected void FillResultMaj(DataTable table)
-		{
-			if (_report == null)
-				CreateReport();
-
-			var model = _report.Models.FirstOrDefault(m => m.Name == "Maj");
-			if (model != null)
-			{
-				var resultTable = table.Clone();
-				foreach (var row in table.Select("Indicateur in ('A jour', 'Non à jour')"))
-				{
-					resultTable.ImportRow(row);
-				}
-
-				model.ResultTable = resultTable;
-			}
-		}
+         return filter;
+      }
 
 		// Add a model to the report
 		protected void AddModel(string modelName)
@@ -192,7 +211,7 @@ namespace TelelogosGenerationReport
          model.Name = modelName;
 
 			var master = this.MasterTable;
-			var column = master.Columns.FirstOrDefault(c => c.Name == "Indicateur");
+			var column = master.Columns.FirstOrDefault(c => c.Name == COLUMN_STATISTIC);
          if (column != null)
          {
             var element = ReportElement.Create();
@@ -204,7 +223,7 @@ namespace TelelogosGenerationReport
             model.Elements.Add(element);
          }
 
-         column = master.Columns.FirstOrDefault(c => c.Name == "Valeur");
+         column = master.Columns.FirstOrDefault(c => c.Name == COLUMN_VALUE);
          if (column != null)
          {
             var element = ReportElement.Create();
@@ -238,22 +257,28 @@ namespace TelelogosGenerationReport
 
          foreach (var model in _report.Models)
          {
-            var modelView = _report.AddChildView(containerView, ReportViewTemplate.ModelName);
-            // Remove the views created by the model template
-            modelView.Views.Clear();
-            modelView.Name = model.Name;
-            modelView.ModelGUID = model.GUID;
-
-            var chartJSView = _report.AddChildView(modelView, ReportViewTemplate.ChartJSName);
-
-            chartJSView.InitParameters(false);
-            chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_doughnut").BoolValue = true;
-            chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_show_legend").BoolValue = true;
-            chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_legend_position").TextValue = "bottom";
-            chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_colors").Value = _colors[modelView.Name];
-            chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_circumference").Value = "1.25*Math.PI";
-            chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_rotation").Value = "0.5*Math.PI";
+            AddModelView(containerView, model);
          }
+      }
+
+      // Add the view for the model to the parent view
+      protected void AddModelView(ReportView parentView, ReportModel model)
+      {
+         var modelView = _report.AddChildView(parentView, ReportViewTemplate.ModelName);
+         // Remove the views created by the model template
+         modelView.Views.Clear();
+         modelView.Name = model.Name;
+         modelView.ModelGUID = model.GUID;
+
+         var chartJSView = _report.AddChildView(modelView, ReportViewTemplate.ChartJSName);
+
+         chartJSView.InitParameters(false);
+         chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_doughnut").BoolValue = true;
+         chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_show_legend").BoolValue = true;
+         chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_legend_position").TextValue = "bottom";
+         chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_colors").Value = Colors[modelView.Name];
+         chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_circumference").Value = "1.25*Math.PI";
+         chartJSView.Parameters.FirstOrDefault(p => p.Name == "chartjs_options_rotation").Value = "0.5*Math.PI";
       }
 
       // Generate the report and returns the file path
@@ -261,13 +286,13 @@ namespace TelelogosGenerationReport
       {
          // Execute the report
          _report.RenderOnly = true;
-         _report.Format = ReportFormat.html;
+         _report.Format = ReportFormat.pdf;
          var execution = new ReportExecution() { Report = _report };
          execution.Execute();
          while (_report.IsExecuting) System.Threading.Thread.Sleep(100);
 
          // Generate the report
-         var outputFile = execution.GeneratePrintResult();
+         var outputFile = execution.GeneratePDFResult();
          return outputFile;
       }
    }

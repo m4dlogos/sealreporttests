@@ -14,15 +14,25 @@ namespace TelelogosGenerationReport
    {
       static void Main(string[] args)
       {
-			//GenerateConformityReport(DATA_Statistics, ReportFormat.html);
-			var reportBuilder = new DashboardReportBuilder();
-			var reportBuilderManager = new DashboardReportBuilderManager();
-			reportBuilderManager.BuildReport(reportBuilder, DATA_Statistics);
-			var reportFile = reportBuilder.GenerateReport();
+         //GenerateConformityReport(DATA_Statistics, ReportFormat.pdf);
 
-			// Show the report
-			Process.Start(reportFile);
-		}
+         // Avec le builder local
+         //var reportBuilder = new DashboardReportBuilder();
+         //var reportBuilderManager = new DashboardReportBuilderManager();
+         //reportBuilderManager.BuildReport(reportBuilder, DATA_Statistics);
+         //var reportFile = reportBuilder.GenerateReport();
+
+         // Avec la librairie Telelogos.Reportings
+         var builder = new Telelogos.Reportings.DashboardReportBuilder();
+         var manager = new Telelogos.Reportings.DashboardReportBuilderManager();
+         var data = new Telelogos.Reportings.DashboardStatistics();
+         Telelogos.Reportings.Helper.ShallowCopyValues(DATA_Statistics, data);
+         manager.BuildReport(builder, data);
+         var reportFile = builder.GenerateReport();
+
+         // Show the report
+         Process.Start(reportFile);
+      }
 
       #region Samples
       public static void SimpleExecution()
@@ -299,17 +309,21 @@ namespace TelelogosGenerationReport
           // Execute the report
           report.RenderOnly = true;
           report.Format = format;
-          //report.Views[0].PdfConfigurations.Add(getPdfHeaderConfiguration());
+          report.Views[0].PdfConfigurations.Add(getPdfHeaderConfiguration());
           var execution = new ReportExecution() { Report = report };
           execution.Execute();
           while (report.IsExecuting) System.Threading.Thread.Sleep(100);
           
           // Generate the report
           var outputFile = execution.GeneratePrintResult();
+
+         var destFileName = Path.GetFileName(outputFile);
+         var destFilePath = Path.Combine(Directory.GetCurrentDirectory(), destFileName);
+         File.Copy(outputFile, destFilePath, true);
           //sendEmail(outputFile);
 
           // Show the report
-          Process.Start(outputFile);
+          Process.Start(destFilePath);
       }
 
       static DashboardStatistics DATA_Statistics = new DashboardStatistics

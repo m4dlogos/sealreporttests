@@ -75,8 +75,8 @@
                         @view.GetValue("chartjs_padding")
                     }
                 },
-				circumference: @Raw(view.GetParameter("chartjs_options_circumference").Value),
-				rotation: @Raw(view.GetParameter("chartjs_options_rotation").Value),
+				circumference: @Raw(view.GetParameter("chartjs_options_circumference").Value)*Math.PI/180,
+				rotation: @Raw(view.GetParameter("chartjs_options_rotation").Value)*Math.PI/180,
                 tooltips: {
                     callbacks: {
                         label: function (tooltipItem, data) {
