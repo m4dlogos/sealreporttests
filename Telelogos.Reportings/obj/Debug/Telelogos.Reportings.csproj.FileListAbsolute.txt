@@ -1,0 +1,15 @@
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\obj\Debug\Telelogos.Reportings.csprojAssemblyReference.cache
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\obj\Debug\Telelogos.Reportings.csproj.CoreCompileInputs.cache
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\bin\Debug\Telelogos.Reportings.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\bin\Debug\Telelogos.Reportings.pdb
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\bin\Debug\SealLibrary.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\bin\Debug\Ionic.Zip.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\bin\Debug\Microsoft.Win32.TaskScheduler.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\bin\Debug\RazorEngine.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\bin\Debug\ScintillaNET.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\bin\Debug\ScintillaNET FindReplaceDialog.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\bin\Debug\Interop.ADODB.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\bin\Debug\System.Web.Razor.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\obj\Debug\Telelogos.Reportings.csproj.CopyComplete
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\obj\Debug\Telelogos.Reportings.dll
+C:\Users\as\Documents\Etudes\SealReport\Seal-Report-5.0\Projects\Telelogos.Reportings\obj\Debug\Telelogos.Reportings.pdb
